@@ -1,0 +1,18 @@
+﻿<div class="col-md-4">
+    Checkpoint
+</div>
+<div class="col-md-4">
+    EnlightenedScore
+</div>
+<div class="col-md-4">
+    ResistanceScore
+</div>
+<div class="col-md-4" ng-repeat-start="score in scores | orderBy:'Cp'">
+    {{score.Cp}}
+</div>
+<div class="col-md-4">
+    {{score.EnlightenedScore | number}}
+</div>
+<div class="col-md-4" ng-repeat-end>
+    {{score.ResistanceScore | number}}
+</div>

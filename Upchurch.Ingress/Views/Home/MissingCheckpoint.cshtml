@@ -1,0 +1,6 @@
+﻿<div class="col-md-12" ng-repeat="cp in missingCheckpoints.Cps">
+    Missing CP {{cp.Cp}}. Click <a ui-sref="updateTimeStamp(
+                                    {checkpoint:cp.Cp
+                                    ,cycleId:$stateParams.cycleId
+                                    ,timeStamp:missingCheckpoints.TimeStamp})">here</a> to update it.
+</div>
