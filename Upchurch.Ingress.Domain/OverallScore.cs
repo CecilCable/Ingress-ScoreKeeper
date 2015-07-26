@@ -6,6 +6,7 @@ namespace Upchurch.Ingress.Domain
     public class OverallScore
     {
         private readonly int _cps;
+        private readonly CpScore _lastCpScore;
 
         public int EnlightenedScore
         {
@@ -19,8 +20,11 @@ namespace Upchurch.Ingress.Domain
             }
         }
 
-        public int EnlightenedScoreTotal { get; set; }
-        public int ResistanceScoreTotal { get; set; }
+        public int CheckPointsLeft {
+            get { return 35 - _cps; }
+        }
+        public int EnlightenedScoreTotal { get; private set; }
+        public int ResistanceScoreTotal { get; private set; }
 
         public int ResistanceScore
         {
@@ -34,14 +38,26 @@ namespace Upchurch.Ingress.Domain
             }
         }
 
+        public CpScore LastCpScore()
+        {
+            return _lastCpScore;
+        }
+
         public OverallScore(ICollection<CpScore> cpScores)
         {
             _cps = cpScores.Count;
             EnlightenedScoreTotal = cpScores.Sum(item => item.EnlightenedScore);
             ResistanceScoreTotal = cpScores.Sum(item => item.ResistanceScore);
+            _lastCpScore = _cps > 0 ? cpScores.OrderByDescending(item => item.Cp).First() : null;
         }
 
-        public int? CPsToLeadChange(CpScore lastCpScore)
+        public FinalScoreProjection FinalScoreProjection()
+        {
+
+            return new FinalScoreProjection(this, _lastCpScore);
+            
+        }
+        private int? CPsToLeadChange(CpScore lastCpScore)
         {
             if (lastCpScore.EnlightenedScore == lastCpScore.ResistanceScore)
             {

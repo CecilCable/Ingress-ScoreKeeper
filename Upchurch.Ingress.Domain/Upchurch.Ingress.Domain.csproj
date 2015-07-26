@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="CP.cs" />
     <Compile Include="CPScore.cs" />
+    <Compile Include="FinalScoreProjection.cs" />
     <Compile Include="ICycleIdentifier.cs" />
     <Compile Include="CycleScore.cs" />
     <Compile Include="ICycleScoreUpdater.cs" />

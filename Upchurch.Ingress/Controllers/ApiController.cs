@@ -102,7 +102,7 @@ namespace Upchurch.Ingress.Controllers
         [HttpGet]
         public IEnumerable<string> Summary(int cycleId)
         {
-            return GetScoreForCycle(cycleId).Summary(null);
+            return GetScoreForCycle(cycleId).Summary(false);
         }
 
         [Route("PostToSlack")]

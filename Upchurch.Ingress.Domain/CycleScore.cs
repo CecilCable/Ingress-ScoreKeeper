@@ -15,18 +15,28 @@ namespace Upchurch.Ingress.Domain
         }
 
         /// <summary>
-        /// if latestCPScore isn't provider it will be looked up
+        /// 
         /// </summary>
-        /// <param name="latestCpScore"></param>
+        /// <param name="displayLastCp"></param>
         /// <returns></returns>
-        public IEnumerable<string> Summary(CpScore latestCpScore = null)
+        public IEnumerable<string> Summary(bool displayLastCp)
         {
-            var checkpointsLeft = CheckPointsLeft();
+
+
+            var overallScore = OverallScore();
+            var latestCpScore = overallScore.LastCpScore();
             if (latestCpScore == null)
             {
-                latestCpScore = LatestCpScore();
+                yield return "No scores recorded. Beginning of the cycle!";
+                yield break;
             }
-            var overallScore = OverallScore();
+            var finalScoreProjection = overallScore.FinalScoreProjection();
+            var checkpointsLeft = overallScore.CheckPointsLeft;
+            if (displayLastCp)
+            {
+                yield return string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", latestCpScore.Cp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore);
+            }
+            //tie game. So unlikely to happen. Except after the 35th checkpoint.
             if (overallScore.ResistanceScoreTotal == overallScore.EnlightenedScoreTotal)
             {
                 yield return string.Format("The score is tied {0:n0} to {1:n0}", overallScore.EnlightenedScore, overallScore.ResistanceScore);
@@ -50,8 +60,9 @@ namespace Upchurch.Ingress.Domain
 
                 yield break;
             }
-            var cps = overallScore.CPsToLeadChange(latestCpScore);
+            
 
+            //resistance winning
             if (overallScore.ResistanceScoreTotal > overallScore.EnlightenedScoreTotal)
             {
                 yield return string.Format("We are winning the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
@@ -65,13 +76,25 @@ namespace Upchurch.Ingress.Domain
                                                , overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal
                                                , (overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal)/checkpointsLeft
                                                , checkpointsLeft);
-                    if (cps.HasValue)
+
+
+                    if (finalScoreProjection.CpsToLeadChange.HasValue)
                     {
-                        yield return string.Format("If cp scores remain unchanged the enlightened will be winning in {0} CPs", cps.Value);
+                        yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0} with the lead changing in {2} CPs",
+                                                   finalScoreProjection.FinalEnlightenedScore,
+                                                   finalScoreProjection.FinalResistanceScore,
+                                                   finalScoreProjection.CpsToLeadChange.Value);
+                    }
+                    else
+                    {
+                        yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0}",
+                                                   finalScoreProjection.FinalEnlightenedScore,
+                                                   finalScoreProjection.FinalResistanceScore);
                     }
                 }
                 yield break;
             }
+            //enlightened winning
             //resistanceScoreTotal < enlightenedScoreTotal
             yield return string.Format("We are Losing the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
             if (checkpointsLeft == 1)
@@ -85,9 +108,18 @@ namespace Upchurch.Ingress.Domain
                                            , (overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal)/checkpointsLeft
                                            , checkpointsLeft
                     );
-                if (cps.HasValue)
+                if (finalScoreProjection.CpsToLeadChange.HasValue)
                 {
-                    yield return string.Format("If cp scores remain unchanged we will be winning in {0} CPs", cps.Value);
+                    yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0} with the lead changing in {2} CPs",
+                                               finalScoreProjection.FinalEnlightenedScore,
+                                               finalScoreProjection.FinalResistanceScore,
+                                               finalScoreProjection.CpsToLeadChange.Value);
+                }
+                else
+                {
+                    yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0}",
+                                               finalScoreProjection.FinalEnlightenedScore,
+                                               finalScoreProjection.FinalResistanceScore);
                 }
             }
 
@@ -173,11 +205,6 @@ namespace Upchurch.Ingress.Domain
             return null;
         }
 
-        private int CheckPointsLeft()
-        {
-            return 35 - _scores.Count;
-        }
-
         public OverallScore OverallScore()
         {
             return new OverallScore(Scores);
@@ -214,18 +241,10 @@ namespace Upchurch.Ingress.Domain
 
         public override string ToString()
         {
-            var latestCpScore = LatestCpScore();
-            var lastCpDescription = new[]
-            {
-                string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", latestCpScore.Cp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore)
-            };
-            return string.Join("\n", lastCpDescription.Union(Summary(latestCpScore)));
+            return string.Join("\n", Summary(true));
         }
 
-        private CpScore LatestCpScore()
-        {
-            return _scores.Count != 0 ? _scores[_scores.Keys.Max()] : new CpScore();
-        }
+        
 
     
     }

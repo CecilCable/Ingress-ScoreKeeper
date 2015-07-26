@@ -45,10 +45,12 @@ namespace Upchurch.Ingress.Tests
         {
             var cp = CheckPoint.Current();
             var score = new CycleScore(cp.Cycle,DateTimeOffset.Now);
-            var cpScore = new CpScore(2, 1000, 0);
-            score.SetScore(cpScore, new Mock<ICycleScoreUpdater>().Object);
             
-            Console.WriteLine(string.Join("\n",score.Summary()));
+            score.SetScore(new CpScore(2, 1000, 0), new Mock<ICycleScoreUpdater>().Object);
+            score.SetScore(new CpScore(3, 500, 0), new Mock<ICycleScoreUpdater>().Object);
+            score.SetScore(new CpScore(4, 500, 1999), new Mock<ICycleScoreUpdater>().Object);
+            
+            Console.WriteLine(string.Join("\n",score.Summary(false)));
         }
         [TestMethod]
         public void setcp0()
@@ -56,7 +58,7 @@ namespace Upchurch.Ingress.Tests
             var cp = new CheckPoint(new DateTime(2015, 6, 2, 13, 0, 0, DateTimeKind.Utc));
             var score = new CycleScore(cp.Cycle, DateTimeOffset.Now);
             score.SetScore(new CpScore(0, 1000, 0), new Mock<ICycleScoreUpdater>().Object);
-            foreach (var summary in score.Summary())
+            foreach (var summary in score.Summary(false))
             {
                 Console.WriteLine(summary);
             }

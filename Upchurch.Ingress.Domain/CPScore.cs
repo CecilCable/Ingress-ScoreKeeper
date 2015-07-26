@@ -16,7 +16,7 @@
         /// <summary>
         ///     this only exists for serialization
         /// </summary>
-        public CpScore()
+        private CpScore()
         {
         }
 
