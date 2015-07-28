@@ -57,35 +57,5 @@ namespace Upchurch.Ingress.Domain
             return new FinalScoreProjection(this, _lastCpScore);
             
         }
-        private int? CPsToLeadChange(CpScore lastCpScore)
-        {
-            if (lastCpScore.EnlightenedScore == lastCpScore.ResistanceScore)
-            {
-                return null;
-            }
-            if (lastCpScore.EnlightenedScore > lastCpScore.ResistanceScore && EnlightenedScoreTotal < ResistanceScoreTotal)
-            {
-                var gainEachCp = lastCpScore.EnlightenedScore - lastCpScore.ResistanceScore;
-                var amountNeededToGain = ResistanceScoreTotal - EnlightenedScoreTotal;
-                return CPsToLeadChange(gainEachCp, amountNeededToGain);
-            }
-            if (lastCpScore.ResistanceScore > lastCpScore.EnlightenedScore && ResistanceScoreTotal < EnlightenedScoreTotal)
-            {
-                var gainEachCp = lastCpScore.ResistanceScore - lastCpScore.EnlightenedScore;
-                var amountNeededToGain = EnlightenedScoreTotal - ResistanceScoreTotal;
-                return CPsToLeadChange(gainEachCp, amountNeededToGain);
-            }
-            return null;
-        }
-
-        private static int? CPsToLeadChange(int gainEachCp, int amountNeededToGain)
-        {
-            var cps = 0;
-            do
-            {
-                cps++;
-            } while (cps*gainEachCp < amountNeededToGain);
-            return cps;
-        }
     }
 }
