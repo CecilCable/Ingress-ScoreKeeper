@@ -29,13 +29,14 @@ namespace Upchurch.Ingress.Domain
         protected CpStatus(CycleIdentifier cycle, int cp)
         {
             Cp = cp;
-            var localTime = new CheckPoint(cycle, cp).DateTime.ToLocalTime();
-            DateTime = localTime.ToShortDateString() + " " + localTime.ToShortTimeString();
+            //var localTime = new CheckPoint(cycle, cp).DateTime.ToLocalTime();
+            //DateTime = localTime.ToShortDateString() + " " + localTime.ToShortTimeString();
+            DateTime = new CheckPoint(cycle, cp).DateTime;
             Type = this.GetType().ToString();
         }
 
         public int Cp { get; private set; }
-        public string DateTime { get; private set; }
+        public DateTime DateTime { get; private set; }
         public string Type { get; private set; }
         
     }
