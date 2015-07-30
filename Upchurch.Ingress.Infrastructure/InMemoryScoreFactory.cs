@@ -8,11 +8,11 @@ namespace Upchurch.Ingress.Infrastructure
     public class InMemoryScoreFactory : ICycleScoreUpdater
     {
         private readonly IDictionary<int, CycleScore> _cycleScores;
-        private readonly IDictionary<int, DateTimeOffset> _timeStamps;
+        private readonly IDictionary<int, long> _timeStamps;
         public InMemoryScoreFactory()
         {
             _cycleScores = new ConcurrentDictionary<int, CycleScore>();
-            _timeStamps = new ConcurrentDictionary<int, DateTimeOffset>();
+            _timeStamps = new ConcurrentDictionary<int, long>();
             
         }
 
@@ -22,23 +22,25 @@ namespace Upchurch.Ingress.Infrastructure
             if (!_cycleScores.TryGetValue(cycle.Id, out cycleScore))
             {
                 var timestamp = DateTimeOffset.Now;
-                cycleScore = new CycleScore(cycle, timestamp);
-                _timeStamps[cycle.Id] = timestamp;
+                cycleScore = new CycleScore(cycle, timestamp.Ticks);
+                _timeStamps[cycle.Id] = timestamp.Ticks;
                 _cycleScores[cycle.Id] = cycleScore;
             }
             return cycleScore;
         }
 
-        public bool UpdateScore(CycleIdentifier cycle, DateTimeOffset dateTimeOffset, ICollection<CpScore> toArray)
+        public bool UpdateScore(CycleIdentifier cycle, int checkpoint, long timestampTicks, CpScore cpScore)
         {
-            if (_timeStamps[cycle.Id] == dateTimeOffset)
+            if (_timeStamps[cycle.Id] == timestampTicks)
             {
                 //shouldn't need to update _cycleScores since the CycleScore is updated elsewhere. This method is for persisting somewhere
-                _timeStamps[cycle.Id] = DateTimeOffset.Now;
+                _timeStamps[cycle.Id] = DateTimeOffset.Now.Ticks;
                 return true;
             }
             return false;
         }
+
+        
 
     }
 }

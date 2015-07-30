@@ -45,7 +45,6 @@
     <Compile Include="ICycleIdentifier.cs" />
     <Compile Include="CycleScore.cs" />
     <Compile Include="ICycleScoreUpdater.cs" />
-    <Compile Include="MissingCps.cs" />
     <Compile Include="OverallScore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

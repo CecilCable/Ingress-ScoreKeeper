@@ -36,25 +36,16 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     });
                 return deferred.promise;
             };
-            this.getMissingCheckpoints = function (cycleId) {
-                var deferred = $q.defer();
-                $http.get("/api/" + cycleId + "/MissingCheckpoints")
-                    .success(function (result) {
-                        deferred.resolve(result);
-                    });
-                return deferred.promise;
-            };
             this.getScoreForCp = function (cycleId, checkpoint) {
                 var deferred = $q.defer();
                 $http.get("/api/" + cycleId + "/" + checkpoint)
                     .success(function (data) {
-                        var result = {
-                            TimeStamp: data.TimeStamp,
-                            Cp: checkpoint,
-                            ResistanceScore: data.Cps[0].ResistanceScore,
-                            EnlightenedScore: data.Cps[0].EnlightenedScore
-                        };
-                        deferred.resolve(result);
+                        if (data) {
+                            deferred.resolve(data);
+                        } else {
+                            deferred.resolve({});
+                        }
+                        
                     });
                 return deferred.promise;
             };
@@ -66,9 +57,10 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     });
                 return deferred.promise;
             };
-            this.setScore = function (cycleId, timestamp, newScore) {
+            //$stateParams.cycleId, 35, overallScore.TimeStamp, $scope.calculatedResistanceScore(), $scope.calculatedResistanceScore
+            this.setScore = function (cycleId, checkpoint, updatedScore) {
                 var deferred = $q.defer();
-                $http.post("/api/" + cycleId + "/" + timestamp, newScore)
+                $http.post("/api/" + cycleId + "/" + checkpoint, updatedScore)
                     .success(function (result) {
                         deferred.resolve(result);
                     });
@@ -81,13 +73,6 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
 
             restService.getOverallScore($stateParams.cycleId).then(function (overallScore) {
                 $scope.overallScore = overallScore;
-            });
-        }
-    ])
-    .controller("missingCheckpointController", [
-        "$scope", "$stateParams", "restService", function ($scope, $stateParams, restService) {
-            restService.getMissingCheckpoints($stateParams.cycleId).then(function (missingCheckpoints) {
-                $scope.missingCheckpoints = missingCheckpoints;
             });
         }
     ])
@@ -109,14 +94,67 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
     .controller("update", [
         "$scope", "$stateParams", "$state", "restService", "score", function ($scope, $stateParams, $state, restService, score) {
             $scope.newScore = score;
-            var timeStamp = score.TimeStamp;
             $scope.submit = function () {
-                restService.setScore($stateParams.cycleId, timeStamp, $scope.newScore).then(function () {
+                restService.setScore($stateParams.cycleId, $stateParams.checkpoint, $scope.newScore).then(function () {
                     $state.go("index.overallScore", {cycleId: $stateParams.cycleId});
                 });
             };
         }
     ])
+    .controller("update35", [
+        "$scope", "$stateParams", "$state", "restService", "score", "overallScore", function ($scope, $stateParams, $state, restService, score, overallScore) {
+            $scope.newScore = score;
+            $scope.EnlightenedScore = score.EnlightenedScore;//save this off so we can back out the score correctly
+            $scope.ResistanceScore = score.ResistanceScore;//save this off so we can back out the score correctly
+            $scope.overallScore = overallScore;
+            $scope.EnlightenedCycleScore = overallScore.EnlightenedScore;
+            $scope.ResistanceCycleScore = overallScore.ResistanceScore;
+            $scope.submit = function () {
+                restService.setScore($stateParams.cycleId, 35, $scope.newScore)
+                    .then(function () {
+                        $state.go("index.overallScore", { cycleId: $stateParams.cycleId });
+                    });
+            };
+            var calculateScore = function (totalScoreSoFar, typedInFinalScore, cp35Score) {
+                if (!typedInFinalScore) {
+                    return "type in cycle score";
+                }
+
+                //no 35 CP recorded
+                if (!cp35Score) {
+                    cp35Score = 0;
+                }
+                else if (Object.prototype.toString.call(cp35Score) == '[object String]') {
+                    cp35Score = 0;
+                }
+
+                var scoreMinimum = (totalScoreSoFar - cp35Score) / 35;
+                scoreMinimum = Math.ceil(scoreMinimum / 1000) * 1000;//since final scores are given in kilobytes
+
+                var newCp35Score = typedInFinalScore * 35 - totalScoreSoFar + cp35Score;
+                
+                
+                if (typedInFinalScore < scoreMinimum) {
+                    return "Cycle score must be at least " + scoreMinimum;
+                }
+                return newCp35Score;
+            }
+            $scope.$watch("EnlightenedCycleScore", function (newValue) {
+                if (!newValue) {
+                    return;//don't delete 
+                }
+                $scope.newScore.EnlightenedScore = calculateScore($scope.overallScore.EnlightenedScoreTotal, newValue, $scope.EnlightenedScore);
+            });
+            $scope.$watch("ResistanceCycleScore", function (newValue) {
+                if (!newValue) {
+                    return;//don't delete 
+                }
+                $scope.newScore.ResistanceScore = calculateScore($scope.overallScore.ResistanceScoreTotal, newValue, $scope.ResistanceScore);
+            });
+
+           
+        }
+        ])
     .run(
         [
             "$rootScope", "$state", "$stateParams",
@@ -155,12 +193,6 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                         "overallScore": {
                             templateUrl: "/OverallScore",
                             controller: "overallController"
-
-                        },
-                        "missingCheckpoint": {
-                            templateUrl: "/MissingCheckpoint",
-                            controller: "missingCheckpointController"
-
                         },
                         "scores": {
                             templateUrl: "/Scores",
@@ -170,6 +202,23 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                         "summary": {
                             templateUrl: "/Summary",
                             controller: "summaryController"
+                        }
+                    }
+                })
+                .state("update35", {
+                    url: "/{cycleId:[0-9]*}/35",
+                    controller: "update35",
+                    templateUrl: "/update35",
+                    resolve: {
+                        score: function ($stateParams, restService, $q) {
+                            var promise = $q.defer();
+                            restService.getScoreForCp($stateParams.cycleId, 35).then(function (score) {
+                                promise.resolve(score);
+                            });
+                            return promise.promise;
+                        },
+                        overallScore: function (restService, $stateParams) {
+                            return restService.getOverallScore($stateParams.cycleId);
                         }
                     }
                 })
@@ -186,16 +235,17 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                             return promise.promise;
                         }
                     }
-                }).state("updateTimeStamp", {
-                    url: "/{cycleId:[0-9]*}/{checkpoint:[0-9]*}/{timeStamp:[0-9]*}",
-                    controller: "update",
-                    templateUrl: "/update",
-                    resolve: {
-                        score: function ($stateParams) {
-                            return {Cp: $stateParams.checkpoint, TimeStamp: $stateParams.timeStamp};
-                        }
-                    }
-                });;
+                });
+                //.state("updateTimeStamp", {
+                //    url: "/{cycleId:[0-9]*}/{checkpoint:[0-9]*}/{timeStamp:[0-9]*}",
+                //    controller: "update",
+                //    templateUrl: "/update",
+                //    resolve: {
+                //        score: function ($stateParams) {
+                //            return {Cp: $stateParams.checkpoint, TimeStamp: $stateParams.timeStamp};
+                //        }
+                //    }
+                //});;
 
         }
     ]);

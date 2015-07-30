@@ -1,28 +1,105 @@
-﻿namespace Upchurch.Ingress.Domain
+﻿using System;
+
+namespace Upchurch.Ingress.Domain
 {
+    /// <summary>
+    /// This class is posted via UI. So keep it simple
+    /// </summary>
     public class CpScore
     {
-        public int Cp { get; set; }
+        //public int Cp { get; set; }
         public int ResistanceScore { get; set; }
         public int EnlightenedScore { get; set; }
 
-        public CpScore(int cp, int resistanceScore, int enlightenedScore)
+        public CpScore(int resistanceScore, int enlightenedScore)
         {
-            Cp = cp;
+            //Cp = cp;
             ResistanceScore = resistanceScore;
             EnlightenedScore = enlightenedScore;
         }
 
-        /// <summary>
-        ///     this only exists for serialization
-        /// </summary>
-        private CpScore()
-        {
-        }
-
         public override string ToString()
         {
-            return string.Format("CP:{0} Enlightened:{1} Resistance:{2}", Cp, ResistanceScore, EnlightenedScore);
+            return string.Format("Enlightened:{0} Resistance:{1}", ResistanceScore, EnlightenedScore);
+        }
+    }
+
+    public abstract class CpStatus
+    {
+        protected CpStatus(CycleIdentifier cycle, int cp)
+        {
+            Cp = cp;
+            var localTime = new CheckPoint(cycle, cp).DateTime.ToLocalTime();
+            DateTime = localTime.ToShortDateString() + " " + localTime.ToShortTimeString();
+            Type = this.GetType().ToString();
+        }
+
+        public int Cp { get; private set; }
+        public string DateTime { get; private set; }
+        public string Type { get; private set; }
+        
+    }
+    public class RecordedScore : CpStatus
+    {
+        public int EnlightenedScore { get; private set; }
+        public int ResistanceScore { get; private set; }
+
+        public RecordedScore(CpScore cpScore, CycleIdentifier cycleIdentifier, int cp)
+            : base(cycleIdentifier, cp)
+        {
+
+            ResistanceScore = cpScore.ResistanceScore;
+            EnlightenedScore = cpScore.EnlightenedScore;
+        }
+
+    }
+
+    public class UpdateScore
+    {
+        public UpdateScore(CpScore cpScore, long timeStamp):this(timeStamp)
+        {
+            TimeStamp = timeStamp.ToString();
+            ResistanceScore = cpScore.ResistanceScore;
+            EnlightenedScore = cpScore.EnlightenedScore;
+        }
+        public UpdateScore(long timeStamp)
+        {
+            TimeStamp = timeStamp.ToString();
+            
+        }
+
+        public UpdateScore()
+        {
+            
+        }
+
+        public int? EnlightenedScore { get; set; }
+        public int? ResistanceScore { get; set; }
+        public string TimeStamp { get; set; }
+    }
+    /// <summary>
+    /// Using this for updating an existing score
+    /// </summary>
+    public class MissingScore : CpStatus
+    {
+
+
+        public MissingScore(int cp, CycleIdentifier cycleIdentifier)
+            : base(cycleIdentifier, cp)
+        {
+            
+
+        }
+
+    }
+
+    public class FutureScore : CpStatus
+    {
+        public FutureScore(int cp, CycleIdentifier cycleIdentifier)
+            : base(cycleIdentifier, cp)
+        {
+
+            
         }
     }
 }

@@ -4,14 +4,46 @@ using System.Linq;
 
 namespace Upchurch.Ingress.Domain
 {
+     
+
     public class CycleScore
     {
         private readonly IDictionary<int, CpScore> _scores;
-        private readonly DateTimeOffset _timestamp;
+        private readonly long _timestampTicks;
 
-        public ICollection<CpScore> Scores
+        public IEnumerable<CpStatus> AllCPs()
         {
-            get { return _scores.Values; }
+            var currentCp = CheckPoint.Current();
+            int cpMax;
+            if (Cycle.Id == currentCp.Cycle.Id)
+            {
+                cpMax = currentCp.CP;
+            }
+            else if (Cycle.Id < currentCp.Cycle.Id)
+            {
+                cpMax = 35;
+            }
+            else
+            {
+                cpMax = 0;
+            }
+
+            for (var i = 1; i <= 35; i++)
+            {
+                CpScore score;
+                if (_scores.TryGetValue(i, out score))
+                {
+                    yield return new RecordedScore(score,Cycle,i);
+                    continue;
+                }
+                if (i <= cpMax)
+                {
+                    yield return new MissingScore(i, Cycle);
+                    continue;
+                    //return MissingCps;
+                }
+                yield return new FutureScore(i,Cycle);
+            }
         }
 
         /// <summary>
@@ -24,21 +56,22 @@ namespace Upchurch.Ingress.Domain
 
 
             var overallScore = OverallScore();
-            var latestCpScore = overallScore.LastCpScore();
+            var latestCpScore = overallScore.LastCpScore;
             if (latestCpScore == null)
             {
-                yield return "No scores recorded. Beginning of the cycle!";
+                yield return "No scores recorded. Cycle has not started.";
                 yield break;
             }
             var finalScoreProjection = overallScore.FinalScoreProjection();
             var checkpointsLeft = overallScore.CheckPointsLeft;
-            if (displayLastCp)
+            if (displayLastCp && overallScore.LastCp!=0)
             {
-                yield return string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", latestCpScore.Cp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore);
+                yield return string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", overallScore.LastCp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore);
             }
             //tie game. So unlikely to happen. Except after the 35th checkpoint.
-            if (overallScore.ResistanceScoreTotal == overallScore.EnlightenedScoreTotal)
+            if (overallScore.EnlightenedScore == overallScore.ResistanceScore)
             {
+                //overallScore.ResistanceScoreTotal == overallScore.EnlightenedScoreTotal check this instead ???
                 yield return string.Format("The score is tied {0:n0} to {1:n0}", overallScore.EnlightenedScore, overallScore.ResistanceScore);
                 if (checkpointsLeft == 1)
                 {
@@ -59,6 +92,19 @@ namespace Upchurch.Ingress.Domain
                 }
 
                 yield break;
+            }
+            if (checkpointsLeft == 0)
+            {
+                if (overallScore.EnlightenedScore > overallScore.ResistanceScore)
+                {
+                    yield return string.Format("We are lost the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+                }
+                if (overallScore.EnlightenedScore < overallScore.ResistanceScore)
+                {
+                    yield return string.Format("We are won the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+                }
+                yield break;
+
             }
             
 
@@ -94,6 +140,7 @@ namespace Upchurch.Ingress.Domain
                 }
                 yield break;
             }
+            
             //enlightened winning
             //resistanceScoreTotal < enlightenedScoreTotal
             yield return string.Format("We are Losing the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
@@ -137,15 +184,16 @@ namespace Upchurch.Ingress.Domain
         ///     Cycle with checpoint scores
         /// </summary>
         /// <param name="cycleIdentifier"></param>
-        /// <param name="timestamp"></param>
+        /// <param name="timestampTicks"></param>
         /// <param name="scores"></param>
-        public CycleScore(CycleIdentifier cycleIdentifier, DateTimeOffset timestamp, params CpScore[] scores)
+        public CycleScore(CycleIdentifier cycleIdentifier, long timestampTicks, params KeyValuePair<int, CpScore>[] scores)
         {
-            _timestamp = timestamp;
+            _timestampTicks = timestampTicks;
             Cycle = cycleIdentifier;
-            _scores = scores.ToDictionary(score => score.Cp);
+            
+            _scores = scores.ToDictionary(score => score.Key, val=>val.Value);
         }
-
+        /*
         public MissingCps CurrentMissingCps()
         {
             var currentCp = CheckPoint.Current();
@@ -161,11 +209,21 @@ namespace Upchurch.Ingress.Domain
             }
             return missing;
         }
+         * */
 
-        public bool HasExactScore(CpScore newScore)
+        public bool HasMissingCPs()
+        {
+            return AllCPs().Any(item => item.GetType() == typeof(MissingScore));
+        }
+        public IEnumerable<CpStatus> MissingCPs()
+        {
+            return AllCPs().Where(item => item.GetType() == typeof(MissingScore));
+        }
+
+        public bool HasExactScore(int cp, UpdateScore newScore)
         {
             CpScore existingScore;
-            if (!_scores.TryGetValue(newScore.Cp, out existingScore))
+            if (!_scores.TryGetValue(cp, out existingScore))
             {
                 return false;
             }
@@ -180,25 +238,26 @@ namespace Upchurch.Ingress.Domain
         ///     return reason not updatable
         /// </summary>
         /// <param name="cpScore"></param>
-        /// <param name="timestamp"></param>
+        /// <param name="checkpoint"></param>
         /// <param name="currentCheckPoint"></param>
         /// <returns></returns>
-        public string IsUpdatable(CpScore cpScore, DateTimeOffset timestamp, CheckPoint currentCheckPoint)
+        public string IsUpdatable(UpdateScore cpScore, int checkpoint, CheckPoint currentCheckPoint)
         {
-            if (currentCheckPoint.Cycle.Id == Cycle.Id && cpScore.Cp > currentCheckPoint.CP)
+            if (Cycle.Id > currentCheckPoint.Cycle.Id)
+            {
+                return "Cannot set a cycle that is in the future";
+            }
+            if (currentCheckPoint.Cycle.Id == Cycle.Id && checkpoint > currentCheckPoint.CP)
             {
                 //only check this if the cycle is the same, else it's probably a previous cycle? Add some testing to explore this.
                 return "Cannot set a checkpoint that is in the future";
             }
-            if (HasExactScore(cpScore))
+            if (HasExactScore(checkpoint,cpScore))
             {
                 return "has exact score";
             }
-            if (cpScore.Cp < 1)
-            {
-                return "CP can't be before 1";
-            }
-            if (timestamp.Ticks != _timestamp.Ticks)
+
+            if (long.Parse(cpScore.TimeStamp) != _timestampTicks)
             {
                 return "timestamp invalid";
             }
@@ -207,7 +266,13 @@ namespace Upchurch.Ingress.Domain
 
         public OverallScore OverallScore()
         {
-            return new OverallScore(Scores);
+            if (_scores.Count == 0)
+            {
+                return new OverallScore();
+            }
+            var lastCP = _scores.Keys.Max();
+            var latestCp = _scores[lastCP];
+            return new OverallScore(_scores.Values, latestCp, lastCP);
         }
 
         /// <summary>
@@ -215,28 +280,29 @@ namespace Upchurch.Ingress.Domain
         /// </summary>
         /// <param name="checkpoint"></param>
         /// <returns></returns>
-        public MissingCps ScoreForCheckpoint(int checkpoint)
+        public UpdateScore ScoreForCheckpoint(int checkpoint)
         {
-            var missingCp = new MissingCps(_timestamp.Ticks);
             CpScore cpScore;
-            if (!_scores.TryGetValue(checkpoint, out cpScore))
+            if (_scores.TryGetValue(checkpoint, out cpScore))
             {
-                cpScore = new CpScore(checkpoint, 0, 0);
+                return new UpdateScore(cpScore, _timestampTicks);
             }
-            missingCp.Cps.Add(cpScore);
-            return missingCp;
+            return new UpdateScore(_timestampTicks);
         }
+
 
         /// <summary>
         /// </summary>
+        /// <param name="checkpoint"></param>
         /// <param name="cpScore"></param>
         /// <param name="update"></param>
         /// <returns></returns>
-        public bool SetScore(CpScore cpScore, ICycleScoreUpdater update)
+        public bool SetScore(int checkpoint, UpdateScore updateScore, ICycleScoreUpdater update)
         {
-            _scores[cpScore.Cp] = cpScore;
+            var cpScore = new CpScore(updateScore.ResistanceScore.Value, updateScore.EnlightenedScore.Value);
+            _scores[checkpoint] = cpScore;
             //this saves it
-            return update.UpdateScore(Cycle, _timestamp, Scores.ToArray());
+            return update.UpdateScore(Cycle, checkpoint, long.Parse(updateScore.TimeStamp), cpScore);
         }
 
         public override string ToString()

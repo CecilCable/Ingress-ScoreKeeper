@@ -28,19 +28,19 @@ namespace Upchurch.Ingress.Controllers
             return PartialView();
         }
 
-                [HttpGet]
-        public PartialViewResult MissingCheckpoint()
+        [HttpGet]
+        public PartialViewResult Update35()
         {
             return PartialView();
         }
 
-                [HttpGet]
+        [HttpGet]
         public PartialViewResult Scores()
         {
             return PartialView();
         }
 
-                [HttpGet]
+        [HttpGet]
         public PartialViewResult Summary()
         {
             return PartialView();

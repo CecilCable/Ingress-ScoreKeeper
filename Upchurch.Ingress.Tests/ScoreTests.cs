@@ -11,15 +11,15 @@ namespace Upchurch.Ingress.Tests
         [TestMethod]
         public void MissingCheckpoints()
         {
-            var score = new CycleScore(CheckPoint.Current().Cycle,DateTimeOffset.Now);
-            foreach (var cp in score.CurrentMissingCps().Cps)
+            var score = new CycleScore(CheckPoint.Current().Cycle,DateTimeOffset.Now.Ticks);
+            foreach (var cp in score.MissingCPs())
             {
                 Console.WriteLine(cp.Cp);
             }
-            score.SetScore(new CpScore(2, 1000, 0), new Mock<ICycleScoreUpdater>().Object);
-            foreach (var cp in score.CurrentMissingCps().Cps)
+            score.SetScore(2,new UpdateScore(new CpScore(1000, 0),0), new Mock<ICycleScoreUpdater>().Object);
+            foreach (var cp in score.MissingCPs())
             {
-                Console.WriteLine(cp);
+                Console.WriteLine(cp.Cp);
             }
         }
 
@@ -27,16 +27,17 @@ namespace Upchurch.Ingress.Tests
         public void CheckMessage()
         {
             var current = CheckPoint.Current();
-            var score = new CycleScore(current.Cycle,DateTimeOffset.Now);
+            var score = new CycleScore(current.Cycle,DateTimeOffset.Now.Ticks);
             var updater = new Mock<ICycleScoreUpdater>().Object;
 
-            score.SetScore(new CpScore(1, 1000, 0), updater);
-            score.SetScore(new CpScore(2, 1000, 0), updater);
-            score.SetScore(new CpScore(3, 1000, 0), updater);
-            score.SetScore(new CpScore(4, 1000, 0), updater);
-            score.SetScore(new CpScore(5, 1000, 0), updater);
-            score.SetScore(new CpScore(6, 1000, 0), updater);
-            score.SetScore(new CpScore(7, 1000, 0), updater);
+            score.SetScore(1,new UpdateScore {EnlightenedScore = 1000,ResistanceScore = 0}, updater);
+            score.SetScore(2, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(3, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(4, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(5, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(6, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(7, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            
             Console.WriteLine(score.ToString());
             
         }
@@ -44,11 +45,12 @@ namespace Upchurch.Ingress.Tests
         public void SkipCP()
         {
             var cp = CheckPoint.Current();
-            var score = new CycleScore(cp.Cycle,DateTimeOffset.Now);
-            
-            score.SetScore(new CpScore(2, 1000, 0), new Mock<ICycleScoreUpdater>().Object);
-            score.SetScore(new CpScore(3, 500, 0), new Mock<ICycleScoreUpdater>().Object);
-            score.SetScore(new CpScore(4, 500, 1999), new Mock<ICycleScoreUpdater>().Object);
+            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks);
+            var updater = new Mock<ICycleScoreUpdater>().Object;
+
+            score.SetScore(2, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
+            score.SetScore(3, new UpdateScore { EnlightenedScore = 500, ResistanceScore = 0 }, updater);
+            score.SetScore(4, new UpdateScore { EnlightenedScore = 500, ResistanceScore = 1999 }, updater);
             
             Console.WriteLine(string.Join("\n",score.Summary(false)));
         }
@@ -56,8 +58,8 @@ namespace Upchurch.Ingress.Tests
         public void setcp0()
         {
             var cp = new CheckPoint(new DateTime(2015, 6, 2, 13, 0, 0, DateTimeKind.Utc));
-            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now);
-            score.SetScore(new CpScore(0, 1000, 0), new Mock<ICycleScoreUpdater>().Object);
+            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks);
+            score.SetScore(0, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, new Mock<ICycleScoreUpdater>().Object);
             foreach (var summary in score.Summary(false))
             {
                 Console.WriteLine(summary);

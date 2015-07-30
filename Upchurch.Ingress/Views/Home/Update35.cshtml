@@ -1,0 +1,29 @@
+﻿<h2>Update Cycle Score for Cycle {{$stateParams.cycleId}} CP 35</h2>
+<h2>Put in the final score and we will calculate the score</h2>
+<div class="form-group row">
+    <div class="col-md-3">
+        <label for="EnlightenedCycleScore">Enlightened Cycle Score</label>
+        <input type="text" class="form-control" id="EnlightenedCycleScore" placeholder="100,000" ng-model="EnlightenedCycleScore">
+    </div>
+    <div class="col-md-4">
+        <label>Enlightened CP 35 Score</label>
+        <h4>{{newScore.EnlightenedScore}}</h4>
+    </div>
+</div>
+<div class="form-group row">
+    <div class="col-md-3">
+        <label for="ResistanceCycleScore">Resistance Cycle Score</label>
+        <input type="text" class="form-control" id="ResistanceCycleScore" placeholder="100,000" ng-model="ResistanceCycleScore">
+    </div>
+    <div class="col-md-4">
+        <label>Resistance CP 35 Score</label>
+        <h4>{{newScore.ResistanceScore}}</h4>
+    </div>
+</div>
+
+
+<a role="button" class="btn btn-warning" ui-sref="index.overallScore({cycleId:$stateParams.cycleId})">Cancel</a>
+
+<button type="button" class="btn btn-primary" ng-click="submit()">Submit</button>
+
+

@@ -42,7 +42,9 @@ namespace Upchurch.Ingress.Infrastructure
             if (retrievedResult.Result == null)
             {
                 // Execute the insert operation.
-                _cloudTable.Execute(TableOperation.Insert(scoreEntity));
+                //don't insert yet
+                //_cloudTable.Execute(TableOperation.Insert(scoreEntity));
+                return scoreEntity;//what is the timestamp here???
             }
             else
             {
@@ -62,22 +64,23 @@ namespace Upchurch.Ingress.Infrastructure
             _cycleScoresCache[cycle.Id] = scoreEntity;
             return scoreEntity.CycleScore();
         }
-        //return timestamp instead?
-        public bool UpdateScore(CycleIdentifier cycle, DateTimeOffset dateTimeOffset, ICollection<CpScore> toArray)
+
+        public bool UpdateScore(CycleIdentifier cycle, int checkpoint, long timestampTicks, CpScore cpScore)
         {
             var scoreEntity = _cycleScoresCache[cycle.Id];
-            if (scoreEntity.Timestamp != dateTimeOffset)//final check before we overwrite something we didn't mean to
+            if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
             {
                 return false;
             }
-            scoreEntity.SaveScores(toArray);
+            scoreEntity.SaveScores(checkpoint,cpScore);
             //this does update scoreEntity.TimeStamp
             _cloudTable.Execute(TableOperation.Replace(scoreEntity));
             //should we check the _cloudTable.Execute().HttpStatusCode ??
             return true;
             //what is the new TimeStamp??
             //else it's not the right timestamp
-            
         }
+
+       
     }
 }

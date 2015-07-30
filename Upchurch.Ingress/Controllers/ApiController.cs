@@ -45,56 +45,54 @@ namespace Upchurch.Ingress.Controllers
         {
             return GetScoreForCycle(cycleId).OverallScore();
         }
-
+        /*
         [Route("{cycleId:int}/MissingCheckpoints")]
         [HttpGet]
-        public MissingCps MissingCheckpoints(int cycleId)
+        public MissingScore MissingCheckpoints(int cycleId)
         {
             return GetScoreForCycle(cycleId).CurrentMissingCps();
-        }
+        }*/
 
         [Route("{cycleId:int}")]
         [HttpGet]
-        public ICollection<CpScore> Scores(int cycleId)
+        public IEnumerable<CpStatus> Scores(int cycleId)
         {
-            return GetScoreForCycle(cycleId).Scores;
+            return GetScoreForCycle(cycleId).AllCPs();
         }
 
         [Route("{cycleId:int}/{checkpoint:int}")]
         [HttpGet]
-        public MissingCps ScoreForCheckpoint(int cycleId, int checkpoint)
-
+        public UpdateScore GetScore(int cycleId, int checkpoint)
         {
             var cycle = GetScoreForCycle(cycleId);
             return cycle.ScoreForCheckpoint(checkpoint);
         }
 
-        [Route("{cycleId:int}/{timestamp:long}")]
+        [Route("{cycleId:int}/{checkpoint:int}")]
         [HttpPost]
-        public string SetScore(int cycleId,long timestamp, CpScore newScore)
+        public string SetScore(int cycleId, int checkpoint, UpdateScore newScore)
         {
-            var timespan = new TimeSpan(0);
-            var ts = new DateTimeOffset(timestamp, timespan);
+
             //Do you need to explicitly overwrite
             //is it the same score?
             //was it okay?
             var cycle = GetScoreForCycle(cycleId);
-            var reason = cycle.IsUpdatable(newScore, ts, CheckPoint.Current());
-            if(!string.IsNullOrEmpty(reason))
+            var reason = cycle.IsUpdatable(newScore, checkpoint, CheckPoint.Current());
+            if (!string.IsNullOrEmpty(reason))
             {
                 return reason;
             }
-            if (!cycle.SetScore(newScore, _scoreUpdater))
+            if (!cycle.SetScore(checkpoint, newScore, _scoreUpdater))
             {
                 return "SetScore Failed. Probably someone else updated it already.";
             }
 
-            if (cycle.CurrentMissingCps().Cps.Count == 0)
+            if (!cycle.HasMissingCPs())
             {
                 PostToSlack(cycle);
                 return "post to slack";
             }
-            
+
             return "OK";
         }
 
@@ -116,10 +114,11 @@ namespace Upchurch.Ingress.Controllers
 
         private void PostToSlack(CycleScore currentCycle)
         {
-            var missingCPs = currentCycle.CurrentMissingCps().Cps.ToArray();
+            
             IRestResponse response;
-            if (missingCPs.Any())
+            if (currentCycle.HasMissingCPs())
             {
+                var missingCPs = currentCycle.MissingCPs();
                 //http://localhost:31790/#/6/1
                 var missingMessages = missingCPs.Select(cp => string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id,cp.Cp)).ToList();
                 response = _slackSender.Send(string.Join("\n", missingMessages));

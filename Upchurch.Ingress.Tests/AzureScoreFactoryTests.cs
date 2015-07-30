@@ -16,7 +16,7 @@ namespace Upchurch.Ingress.Tests
             //179,300	147,311
             var currentCycle = CheckPoint.Current().Cycle;
             var currentCycleScore = factory.GetScoreForCycle(currentCycle);
-            currentCycleScore.SetScore(new CpScore(33, 179300, 147311), factory);
+            currentCycleScore.SetScore(1, new UpdateScore(new CpScore(179300, 147311), 0), factory);
         }
     }
 }

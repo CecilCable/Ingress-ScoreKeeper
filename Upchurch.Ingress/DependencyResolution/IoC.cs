@@ -37,9 +37,9 @@ namespace Upchurch.Ingress.DependencyResolution {
                 }
                 else
                 {
-                    //c.ForSingletonOf<ICycleScoreUpdater>().Use<AzureScoreFactory>().Ctor<string>("connectionString").Is("DefaultEndpointsProtocol=https;AccountName=kyledemo;AccountKey=q9t3aF4uH/OFBZvoaKBFUJfnKni+ZDtmzwZdyatbpCsslTjL7uLlLVpTOD0Vzpg2pctW84s1oAfHW8DVYSaEiQ==");
+                    c.ForSingletonOf<ICycleScoreUpdater>().Use<AzureScoreFactory>().Ctor<string>("connectionString").Is("DefaultEndpointsProtocol=https;AccountName=kyledemo;AccountKey=q9t3aF4uH/OFBZvoaKBFUJfnKni+ZDtmzwZdyatbpCsslTjL7uLlLVpTOD0Vzpg2pctW84s1oAfHW8DVYSaEiQ==");
                     
-                    c.For<ICycleScoreUpdater>().Use<InMemoryScoreFactory>().Singleton();
+                    //c.For<ICycleScoreUpdater>().Use<InMemoryScoreFactory>().Singleton();
                 }
                 
                 var slackApiUrl = ConfigurationManager.AppSettings["SlackApiUrl"];

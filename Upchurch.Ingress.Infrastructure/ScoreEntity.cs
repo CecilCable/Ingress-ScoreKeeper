@@ -9,7 +9,7 @@ namespace Upchurch.Ingress.Infrastructure
     public class ScoreEntity : TableEntity
     {
         public const string CincinnatiArea = "AM02-KILO-00";
-        private IDictionary<int, CpScore> _scores = new Dictionary<int, CpScore>();
+        private readonly IDictionary<int, CpScore> _scores = new Dictionary<int, CpScore>();
 
         /// <summary>
         ///     create a new checkpoint
@@ -29,8 +29,8 @@ namespace Upchurch.Ingress.Infrastructure
 
         public CycleScore CycleScore()
         {
-
-            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp, _scores.Values.ToArray());
+            //use a readonly dictionary instead?
+            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp.Ticks, _scores.ToArray());
         }
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
@@ -39,22 +39,38 @@ namespace Upchurch.Ingress.Infrastructure
             foreach (var item in properties)
             {
                 var cp = int.Parse(item.Key.Substring(3));
-                CpScore cpScore;
-                if (!_scores.TryGetValue(cp, out cpScore))
-                {
-                    cpScore = new CpScore(cp, 0, 0);
-                    _scores.Add(cp, cpScore);
-                }
-
                 if (item.Key.StartsWith("res"))
                 {
-                    cpScore.ResistanceScore = item.Value.Int32Value.Value;
+                    SetResistanceScore(cp, item.Value.Int32Value.Value);
                 }
                 else if (item.Key.StartsWith("enl"))
                 {
-                    cpScore.EnlightenedScore = item.Value.Int32Value.Value;
+                    SetEnlightenedScore(cp, item.Value.Int32Value.Value);
                 }
             }
+        }
+
+        private void SetResistanceScore(int cp, int resistanceScore)
+        {
+            CpScore cpScore;
+            if (!_scores.TryGetValue(cp, out cpScore))
+            {
+                cpScore = new CpScore(resistanceScore, 0);
+                _scores.Add(cp, cpScore);
+                return;
+            }
+            cpScore.ResistanceScore = resistanceScore;
+        }
+        private void SetEnlightenedScore(int cp, int enlightenedScore)
+        {
+            CpScore cpScore;
+            if (!_scores.TryGetValue(cp, out cpScore))
+            {
+                cpScore = new CpScore(0, enlightenedScore);
+                _scores.Add(cp, cpScore);
+                return;
+            }
+            cpScore.EnlightenedScore = enlightenedScore;
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
@@ -69,9 +85,9 @@ namespace Upchurch.Ingress.Infrastructure
             return results;
         }
 
-        internal void SaveScores(ICollection<CpScore> scores)
+        public void SaveScores(int checkpoint, CpScore cpScore)
         {
-            _scores = scores.ToDictionary(item => item.Cp);
+            _scores[checkpoint] = cpScore;
         }
     }
 }

@@ -1,4 +1,14 @@
 ﻿    <div ui-view="overallScore" class="row"></div>
-    <div ui-view="missingCheckpoint" class="row"></div>
-    <div ui-view="summary" class="row"></div>
+    <span ui-view="summary"></span>
     <div ui-view="scores" class="row"></div>
+
+<div class="row">
+    <div class="col-lg-2" >
+
+        <a class="btn btn-primary" ui-sref="index.overallScore({cycleId:$stateParams.cycleId-1})" ng-show="$stateParams.cycleId!=0">Previous Cycle</a>
+    </div>
+    <div class="col-lg-2">
+        @*couldn't get + 1 to not to string concatenation. but -1 +2 works fine :-()*@
+        <a class="btn btn-success" ui-sref="index.overallScore({cycleId:$stateParams.cycleId-1+2})">Next Cycle</a>
+    </div>
+</div>

@@ -1035,7 +1035,7 @@
     <Content Include="Scripts\version.json" />
     <Content Include="Views\Home\Angular.cshtml" />
     <Content Include="Views\Home\OverallScore.cshtml" />
-    <Content Include="Views\Home\MissingCheckpoint.cshtml" />
+    <Content Include="Views\Home\Update35.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
