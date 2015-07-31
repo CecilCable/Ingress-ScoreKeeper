@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.WindowsAzure.Storage;
@@ -19,6 +20,7 @@ namespace Upchurch.Ingress.Infrastructure
         {
             PartitionKey = CincinnatiArea;
             RowKey = cycleScore.Id.ToString();
+            Timestamp = DateTimeOffset.MinValue;
         }
 
         // for Serialization

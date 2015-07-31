@@ -44,12 +44,9 @@ namespace Upchurch.Ingress.Infrastructure
                 // Execute the insert operation.
                 //don't insert yet
                 //_cloudTable.Execute(TableOperation.Insert(scoreEntity));
-                return scoreEntity;//what is the timestamp here???
+                return scoreEntity;
             }
-            else
-            {
-                scoreEntity = (ScoreEntity) retrievedResult.Result;
-            }
+            scoreEntity = (ScoreEntity) retrievedResult.Result;
             return scoreEntity;
         }
 
@@ -74,7 +71,7 @@ namespace Upchurch.Ingress.Infrastructure
             }
             scoreEntity.SaveScores(checkpoint,cpScore);
             //this does update scoreEntity.TimeStamp
-            _cloudTable.Execute(TableOperation.Replace(scoreEntity));
+            _cloudTable.Execute(scoreEntity.Timestamp == DateTimeOffset.MinValue ? TableOperation.Insert(scoreEntity) : TableOperation.Replace(scoreEntity));
             //should we check the _cloudTable.Execute().HttpStatusCode ??
             return true;
             //what is the new TimeStamp??
