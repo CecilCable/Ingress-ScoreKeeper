@@ -97,11 +97,13 @@ namespace Upchurch.Ingress.Domain
             {
                 if (overallScore.EnlightenedScore > overallScore.ResistanceScore)
                 {
-                    yield return string.Format("We are lost the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+                  //  overallScore.cyclesWon--;
+                    yield return string.Format("We lost the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore/*, overallScore.cyclesWon*-1*/);
                 }
                 if (overallScore.EnlightenedScore < overallScore.ResistanceScore)
                 {
-                    yield return string.Format("We are won the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+                    //overallScore.cyclesWon++;
+                    yield return string.Format("We won the cycle {0:n0} to {1:n0}!", overallScore.ResistanceScore, overallScore.EnlightenedScore/*, overallScore.cyclesWon*/);
                 }
                 yield break;
 
