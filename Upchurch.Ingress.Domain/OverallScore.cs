@@ -6,6 +6,7 @@ namespace Upchurch.Ingress.Domain
     public class OverallScore
     {
         private readonly int _cps;
+       // public int cyclesWon = 0; //can't remember if this is legal in C# or just a java thing
 
         public int EnlightenedScore
         {
@@ -48,6 +49,7 @@ namespace Upchurch.Ingress.Domain
             ResistanceScoreTotal = 0;
             LastCp = 0;
             LastCpScore = null;
+            
         }
         public OverallScore(ICollection<CpScore> cpScores, CpScore latestCpScore, int latestCp)
         {
