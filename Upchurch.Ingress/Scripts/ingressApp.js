@@ -45,7 +45,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                         } else {
                             deferred.resolve({});
                         }
-                        
+
                     });
                 return deferred.promise;
             };
@@ -95,7 +95,36 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
         "$scope", "$stateParams", "$state", "restService", "score", function ($scope, $stateParams, $state, restService, score) {
             $scope.newScore = score;
             $scope.submit = function () {
-                restService.setScore($stateParams.cycleId, $stateParams.checkpoint, $scope.newScore).then(function () {
+                //newScore will be something like {"EnlightenedScore":156537,"ResistanceScore":179583,"TimeStamp":"635751832625510213"}
+                if (!$scope.newScore.EnlightenedScore) {
+                    alert("EnlightenedScore is not valid");
+                    return;
+                }
+                if (!$scope.newScore.ResistanceScore) {
+                    alert("ResistanceScore is not valid");
+                    return;
+                }
+                var enlightenedScore = $scope.newScore.EnlightenedScore;
+                if (enlightenedScore.replace) {
+                    enlightenedScore = Number(enlightenedScore.replace(",", ""));
+                    if (!enlightenedScore) {
+                        alert("EnlightenedScore is not valid");
+                        return;
+                    }
+                }
+                var registanceScore = $scope.newScore.ResistanceScore;
+                if (registanceScore.replace) {
+                    registanceScore = Number(registanceScore.replace(",", ""));
+                    if (!registanceScore) {
+                        alert("ResistanceScore is not valid");
+                        return;
+                    }
+                }
+                restService.setScore($stateParams.cycleId, $stateParams.checkpoint, {
+                    EnlightenedScore:enlightenedScore,
+                    ResistanceScore:registanceScore,
+                    TimeStamp: score.TimeStamp
+                }).then(function () {
                     $state.go("index.overallScore", {cycleId: $stateParams.cycleId});
                 });
             };
