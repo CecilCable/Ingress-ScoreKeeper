@@ -8,6 +8,10 @@
     <label for="ResistanceScore">Resistance Score</label>
     <input type="text" class="form-control" id="ResistanceScore" placeholder="100,000" ng-model="newScore.ResistanceScore">
 </div>
+<div class="form-group">
+    <label for="Kudos">Kudos (think of this as a CP 'sponsor'. Put whatever you want in here.)</label>
+    <input type="text" class="form-control" id="Kudos" placeholder="Kudos to" ng-model="newScore.Kudos">
+</div>
 <a role="button" class="btn btn-warning" ui-sref="index.overallScore({cycleId:$stateParams.cycleId})">Cancel</a>
 
 <button type="button" class="btn btn-primary" ng-click="submit()">Submit</button>

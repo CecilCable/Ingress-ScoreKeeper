@@ -1,43 +1,49 @@
 ﻿<div class="row">
-    <div class="col-md-3">
+    <div class="col-md-1 col-md-offset-3">
         Checkpoint
     </div>
-    <div class="col-md-3">
-        EnlightenedScore
+    <div class="col-md-1">
+        Enlightened
     </div>
-    <div class="col-md-3">
-        ResistanceScore
+    <div class="col-md-1">
+        Resistance
     </div>
-    <div class="col-md-3">
+    <div class="col-md-1">
+        Kudos
+    </div>
+    <div class="col-md-2">
         Checkpoint Time
     </div>
 </div>
 <div class="row" ng-repeat="score in scores | orderBy:'Cp'">
-    <div class="col-md-3">
+    <div class="col-md-1 col-md-offset-3">
         {{score.Cp}}
     </div>
-    <span ng-show="score.Type=='Upchurch.Ingress.Domain.RecordedScore'">
-        <div class="col-md-3">
-            {{score.EnlightenedScore | number}}
-        </div>
-        <div class="col-md-3">
-            {{score.ResistanceScore | number}}
-        </div>
-    </span>
-    <span ng-show="score.Type=='Upchurch.Ingress.Domain.MissingScore'">
-        <div class="col-md-6">
-            Missing. Click <a ui-sref="update(
+<span ng-show="score.Type=='Upchurch.Ingress.Domain.RecordedScore'">
+    <div class="col-md-1">
+        {{score.EnlightenedScore | number}}
+    </div>
+    <div class="col-md-1">
+        {{score.ResistanceScore | number}}
+    </div>
+    <div class="col-md-1">
+        {{score.Kudos}}
+    </div>
+</span>
+<span ng-show="score.Type=='Upchurch.Ingress.Domain.MissingScore'">
+    <div class="col-md-3">
+        Missing. Click <a ui-sref="update(
                                     {checkpoint:score.Cp
                                     ,cycleId:$stateParams.cycleId})">here</a> to update it.
-        </div>
-    </span>
-    <span ng-show="score.Type=='Upchurch.Ingress.Domain.FutureScore'">
-        <div class="col-md-6">
-            FutureScore
-        </div>
-    </span>
+    </div>
+</span>
+<span ng-show="score.Type=='Upchurch.Ingress.Domain.FutureScore'">
+    <div class="col-md-3">
+        FutureScore
+    </div>
+</span>
 
-        <div class="col-md-3">
-            {{score.DateTime| date:'short'}}
-        </div>
+<div class="col-md-2">
+    {{score.DateTime| date:'short'}}
+</div>
 </div>

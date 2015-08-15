@@ -8,14 +8,17 @@ namespace Upchurch.Ingress.Domain
     public class CpScore
     {
         //public int Cp { get; set; }
-        public int ResistanceScore { get; set; }
-        public int EnlightenedScore { get; set; }
+        public int ResistanceScore { get; private set; }
+        public int EnlightenedScore { get; private set; }
 
-        public CpScore(int resistanceScore, int enlightenedScore)
+        public string Kudos { get; set; }
+
+        public CpScore(int resistanceScore, int enlightenedScore, string kudos)
         {
             //Cp = cp;
             ResistanceScore = resistanceScore;
             EnlightenedScore = enlightenedScore;
+            Kudos = kudos;
         }
 
         public override string ToString()
@@ -44,6 +47,7 @@ namespace Upchurch.Ingress.Domain
     {
         public int EnlightenedScore { get; private set; }
         public int ResistanceScore { get; private set; }
+        public string Kudos { get; private set; }
 
         public RecordedScore(CpScore cpScore, CycleIdentifier cycleIdentifier, int cp)
             : base(cycleIdentifier, cp)
@@ -51,8 +55,10 @@ namespace Upchurch.Ingress.Domain
 
             ResistanceScore = cpScore.ResistanceScore;
             EnlightenedScore = cpScore.EnlightenedScore;
+            Kudos = cpScore.Kudos;
         }
 
+        
     }
 
     public class UpdateScore
@@ -62,11 +68,11 @@ namespace Upchurch.Ingress.Domain
             TimeStamp = timeStamp.ToString();
             ResistanceScore = cpScore.ResistanceScore;
             EnlightenedScore = cpScore.EnlightenedScore;
+            Kudos = cpScore.Kudos;
         }
         public UpdateScore(long timeStamp)
         {
             TimeStamp = timeStamp.ToString();
-            
         }
 
         public UpdateScore()
@@ -77,6 +83,8 @@ namespace Upchurch.Ingress.Domain
         public int? EnlightenedScore { get; set; }
         public int? ResistanceScore { get; set; }
         public string TimeStamp { get; set; }
+
+        public string Kudos { get; set; }
     }
     /// <summary>
     /// Using this for updating an existing score

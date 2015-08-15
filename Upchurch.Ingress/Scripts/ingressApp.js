@@ -95,7 +95,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
         "$scope", "$stateParams", "$state", "restService", "score", function ($scope, $stateParams, $state, restService, score) {
             $scope.newScore = score;
             $scope.submit = function () {
-                //newScore will be something like {"EnlightenedScore":156537,"ResistanceScore":179583,"TimeStamp":"635751832625510213"}
+                //newScore will be something like {"EnlightenedScore":156537,"ResistanceScore":179583,"TimeStamp":"635751832625510213","Kudos":"Foo"}
                 if (!$scope.newScore.EnlightenedScore) {
                     alert("EnlightenedScore is not valid");
                     return;
@@ -123,7 +123,8 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                 restService.setScore($stateParams.cycleId, $stateParams.checkpoint, {
                     EnlightenedScore:enlightenedScore,
                     ResistanceScore:registanceScore,
-                    TimeStamp: score.TimeStamp
+                    TimeStamp: score.TimeStamp,
+                    Kudos: $scope.newScore.Kudos
                 }).then(function () {
                     $state.go("index.overallScore", {cycleId: $stateParams.cycleId});
                 });
@@ -148,6 +149,14 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                 if (!typedInFinalScore) {
                     return "type in cycle score";
                 }
+
+                if (typedInFinalScore.replace) {
+                    typedInFinalScore = Number(typedInFinalScore.replace(",", ""));
+                    if (!typedInFinalScore) {
+                        alert("input is not valid");
+                    }
+                }
+
 
                 //no 35 CP recorded
                 if (!cp35Score) {

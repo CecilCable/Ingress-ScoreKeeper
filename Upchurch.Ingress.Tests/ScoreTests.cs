@@ -16,7 +16,7 @@ namespace Upchurch.Ingress.Tests
             {
                 Console.WriteLine(cp.Cp);
             }
-            score.SetScore(2,new UpdateScore(new CpScore(1000, 0),0), new Mock<ICycleScoreUpdater>().Object);
+            score.SetScore(2,new UpdateScore(new CpScore(1000, 0,"Cecilcable"),0), new Mock<ICycleScoreUpdater>().Object);
             foreach (var cp in score.MissingCPs())
             {
                 Console.WriteLine(cp.Cp);

@@ -301,7 +301,7 @@ namespace Upchurch.Ingress.Domain
         /// <returns></returns>
         public bool SetScore(int checkpoint, UpdateScore updateScore, ICycleScoreUpdater update)
         {
-            var cpScore = new CpScore(updateScore.ResistanceScore.Value, updateScore.EnlightenedScore.Value);
+            var cpScore = new CpScore(updateScore.ResistanceScore.Value, updateScore.EnlightenedScore.Value, updateScore.Kudos);
             _scores[checkpoint] = cpScore;
             //this saves it
             return update.UpdateScore(Cycle, checkpoint, long.Parse(updateScore.TimeStamp), cpScore);

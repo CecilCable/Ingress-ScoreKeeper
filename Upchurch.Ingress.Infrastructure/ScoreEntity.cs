@@ -49,6 +49,10 @@ namespace Upchurch.Ingress.Infrastructure
                 {
                     SetEnlightenedScore(cp, item.Value.Int32Value.Value);
                 }
+                else if (item.Key.StartsWith("kud"))
+                {
+                    SetKudos(cp, item.Value.StringValue);
+                }
             }
         }
 
@@ -57,22 +61,34 @@ namespace Upchurch.Ingress.Infrastructure
             CpScore cpScore;
             if (!_scores.TryGetValue(cp, out cpScore))
             {
-                cpScore = new CpScore(resistanceScore, 0);
+                cpScore = new CpScore(resistanceScore, 0,null);
                 _scores.Add(cp, cpScore);
                 return;
             }
-            cpScore.ResistanceScore = resistanceScore;
+            _scores[cp] = new CpScore(resistanceScore, cpScore.EnlightenedScore, cpScore.Kudos);//kind od a hack, but trying to keep the CpScore immutable
         }
+
         private void SetEnlightenedScore(int cp, int enlightenedScore)
         {
             CpScore cpScore;
             if (!_scores.TryGetValue(cp, out cpScore))
             {
-                cpScore = new CpScore(0, enlightenedScore);
+                cpScore = new CpScore(0, enlightenedScore, null);
+                _scores.Add(cp, cpScore);
+            }
+            _scores[cp] = new CpScore(cpScore.ResistanceScore, enlightenedScore, cpScore.Kudos);
+        }
+
+        private void SetKudos(int cp, string kudos)
+        {
+            CpScore cpScore;
+            if (!_scores.TryGetValue(cp, out cpScore))
+            {
+                cpScore = new CpScore(0, 0, kudos);
                 _scores.Add(cp, cpScore);
                 return;
             }
-            cpScore.EnlightenedScore = enlightenedScore;
+            _scores[cp] = new CpScore(cpScore.ResistanceScore, cpScore.EnlightenedScore,kudos);
         }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
@@ -82,6 +98,7 @@ namespace Upchurch.Ingress.Infrastructure
             {
                 results.Add("res" + item.Key, new EntityProperty(item.Value.ResistanceScore));
                 results.Add("enl" + item.Key, new EntityProperty(item.Value.EnlightenedScore));
+                results.Add("kud" + item.Key, new EntityProperty(item.Value.Kudos));
             }
 
             return results;
