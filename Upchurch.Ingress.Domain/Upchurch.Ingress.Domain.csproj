@@ -41,12 +41,17 @@
   <ItemGroup>
     <Compile Include="CP.cs" />
     <Compile Include="CPScore.cs" />
+    <Compile Include="CpStatus.cs" />
     <Compile Include="FinalScoreProjection.cs" />
+    <Compile Include="FutureScore.cs" />
     <Compile Include="ICycleIdentifier.cs" />
     <Compile Include="CycleScore.cs" />
     <Compile Include="ICycleScoreUpdater.cs" />
+    <Compile Include="MissingScore.cs" />
     <Compile Include="OverallScore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecordedScore.cs" />
+    <Compile Include="UpdateScore.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
