@@ -10,9 +10,8 @@ namespace Upchurch.Ingress.Tests
         [TestMethod]
         public void TestMethod1()
         {
-            var response = new SendMessageToSlack("http://localhost").Send("Test Message");
-            Console.WriteLine(response.StatusCode);
-            Console.WriteLine(response.Content);
+            new SendMessageToSlack("http://localhost").Send("Test Message");
+            
         }
     }
 }

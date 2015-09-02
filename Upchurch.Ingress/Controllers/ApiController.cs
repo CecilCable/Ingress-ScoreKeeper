@@ -114,108 +114,56 @@ namespace Upchurch.Ingress.Controllers
 
         private void PostToSlack(CycleScore currentCycle)
         {
-            
-            IRestResponse response;
-            if (currentCycle.HasMissingCPs())
+            var missingCPs = currentCycle.MissingCPs().ToArray();
+
+            if (missingCPs.Length == 0)
             {
-                var missingCPs = currentCycle.MissingCPs();
-                //http://localhost:31790/#/6/1
-                var missingMessages = missingCPs.Select(cp => string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id,cp.Cp)).ToList();
-                response = _slackSender.Send(string.Join("\n", missingMessages));
+                _slackSender.Send(currentCycle.ToString());
+                return;
             }
-            else
+            if (missingCPs.Length == 1)
             {
-                response = _slackSender.Send(currentCycle.ToString());
+                var missingMessages = string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0]);
+                _slackSender.Send(missingMessages);
+                return;
             }
 
-            if (response.StatusCode != HttpStatusCode.OK)
+            var cpStrings = new string[missingCPs.Length];
+
+            for (var i = 0; i < missingCPs.Length; i++)
             {
-                throw new HttpException((int) response.StatusCode, "Error Sending To Slack. " + response.ErrorMessage);
+                if (i != 0 && i + 1 != missingCPs.Length)
+                {
+                    if (missingCPs[i - 1].Cp + 1 == missingCPs[i].Cp && missingCPs[i + 1].Cp - 1 == missingCPs[i].Cp)
+                    {
+                        cpStrings[i] = "-";
+                        continue;
+                    }
+                }
+                cpStrings[i] = missingCPs[i].Cp.ToString();
             }
+            var cpString = cpStrings[0];
+
+            for (var i = 1; i < cpStrings.Length; i++)
+            {
+                if (cpStrings[i] == "-" && cpStrings[i - 1] == "-")
+                {
+                    continue;
+                }
+                if (cpStrings[i] != "-" && cpStrings[i-1]!="-")
+                {
+                    cpString += ",";
+                }
+                cpString += cpStrings[i];
+            }
+
+            var manymissing = string.Format("Missing CPs {2}. Goto http://{0}/#/{1} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cpString);
+            _slackSender.Send(manymissing);
+
+
+
         }
 
-        /*
-        [Route("{cp:int}/{elightenedScore:int}/{resistanceScore:int}")]
-        [HttpGet]
-        // GET api/values/5
-        public string SetScore(int cp, int elightenedScore, int resistanceScore)
-        {
-            var checkPoint = CheckPoint.Current();
-            var cpScore = new CpScore(cp, resistanceScore, elightenedScore);
-            var setScore = new SetScoreCommand(checkPoint, cpScore);
-
-            _cycleScore = _cycleScore.SetScore(setScore);
-            _factory.UpdateScore(_cycleScore);
-            if (!_cycleScore.CurrentMissingCps().Any())
-            {
-                SendMessageToSlack.Send(_cycleScore.ToString());
-            }
-            return _cycleScore.ToString();
-        }
-         * */
-        /*
-        [Route("summary")]
-        [HttpGet]
-        public string[] Summary()
-        {
-            return _currenntCycleScore.Summary.ToArray();
-        }
-        */
-        /*
-        /// <summary>
-        ///     For slack slashcommands. Not wired in
-        /// </summary>
-        /// <param name="post"></param>
-        /// <returns></returns>
-        private string Post(payload post)
-        {
-            //post.text should be [1-35] enlscore resscore 
-            //or
-            //post.text should be enlscore resscore 
-            
-            try
-            {
-                var command = SetScoreCommand.Parse(post.text);
-                if (command == null)
-                {
-                    if (string.IsNullOrEmpty(post.text))
-                    {
-                        return _cycleScore.ToString();
-                    }
-                    /*
-                    if (post.text.Equals("list", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        var list = string.Join("\n", scoreEntity.CycleScore.List());
-                        SendMessageToSlack.Send(list);
-                        return list;
-                    }
-                     * * ///
-                    if (post.text.Equals("summary", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        var summary = _cycleScore.ToString();
-                        SendMessageToSlack.Send(summary);
-                        return summary;
-                    }
-                    return string.Format("Could not parse {0}", post.text);
-                }
-                if (_cycleScore.IsForCurrentCycle(command))
-                {
-                    _cycleScore = _cycleScore.SetScore(command);
-                    _factory.UpdateScore(_cycleScore);
-                }
-                else
-                {
-                    //should we insert logic?
-                    return "No scores availabe for current cycle.";
-                }
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
-            
-
-            return _cycleScore.ToString();
-        }*/
+       
     }
 }

@@ -1,8 +1,10 @@
-﻿using RestSharp;
+﻿using System.Net;
+using System.Web;
+using RestSharp;
 
 namespace Upchurch.Ingress.Infrastructure
 {
-    public class SendMessageToSlack:ISlackSender
+    public class SendMessageToSlack : ISlackSender
     {
         private readonly string _slackApiUrl;
 
@@ -11,12 +13,16 @@ namespace Upchurch.Ingress.Infrastructure
             _slackApiUrl = slackApiUrl;
         }
 
-        public IRestResponse Send(string text)
+        public void Send(string text)
         {
             var client = new RestClient(_slackApiUrl);
             var request = new RestRequest(Method.POST);
             request.AddJsonBody(new payload {text = text});
-            return client.Execute(request);
+            var response = client.Execute(request);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new HttpException((int) response.StatusCode, "Error Sending To Slack. " + response.ErrorMessage);
+            }
         }
 
         private class payload
