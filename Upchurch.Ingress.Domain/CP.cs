@@ -6,7 +6,7 @@ namespace Upchurch.Ingress.Domain
     {
         private readonly DateTime _zeroTime = new DateTime(2015, 6, 2, 13, 0, 0, DateTimeKind.Utc);
         public int CP { get; private set; }
-
+        private readonly TimeZoneInfo _easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
         public CheckPoint(DateTime dateTime)
         {
             var timesincezero = dateTime.Subtract(_zeroTime);
@@ -24,6 +24,40 @@ namespace Upchurch.Ingress.Domain
             {
                 Cycle = new CycleIdentifier(cps / 35);
             }
+        }
+
+        public bool IsFirstMessageOfDay()
+        {
+            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime, _easternZone);
+            if (easternTime.Hour >= 0 && easternTime.Hour < 5)//midnight to 4AM EST
+            {
+                return true;
+            }
+            return false;
+
+        }
+
+        public string NextUnsnoozeTime()
+        {
+
+            var dateTimeNow = DateTime;
+            CheckPoint newCP;
+            while (true)
+            {
+                dateTimeNow = dateTimeNow.AddHours(5);
+                newCP = new CheckPoint(dateTimeNow);
+                if (newCP.Cycle.Id != Cycle.Id)
+                {
+                    break;
+                }
+                if (newCP.IsFirstMessageOfDay())
+                {
+                    break;
+                }
+            }
+            var easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(newCP.DateTime, easternZone);
+            return string.Format("{0} {1}", easternTime.ToShortDateString(), easternTime.ToShortTimeString());
         }
 
         public CheckPoint(CycleIdentifier cycle, int cp)

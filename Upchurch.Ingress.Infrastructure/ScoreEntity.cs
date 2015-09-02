@@ -11,6 +11,7 @@ namespace Upchurch.Ingress.Infrastructure
     {
         public const string CincinnatiArea = "AM02-KILO-00";
         private readonly IDictionary<int, CpScore> _scores = new Dictionary<int, CpScore>();
+        private bool _isSnoozed;
 
         /// <summary>
         ///     create a new checkpoint
@@ -32,7 +33,7 @@ namespace Upchurch.Ingress.Infrastructure
         public CycleScore CycleScore()
         {
             //use a readonly dictionary instead?
-            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp.Ticks, _scores.ToArray());
+            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp.Ticks, _isSnoozed, _scores.ToArray());
         }
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
@@ -40,6 +41,11 @@ namespace Upchurch.Ingress.Infrastructure
             base.ReadEntity(properties, operationContext);
             foreach (var item in properties)
             {
+                if (item.Key == "snooze")
+                {
+                    _isSnoozed = item.Value.BooleanValue.Value;
+                    continue;
+                }
                 var cp = int.Parse(item.Key.Substring(3));
                 if (item.Key.StartsWith("res"))
                 {
@@ -100,6 +106,7 @@ namespace Upchurch.Ingress.Infrastructure
                 results.Add("enl" + item.Key, new EntityProperty(item.Value.EnlightenedScore));
                 results.Add("kud" + item.Key, new EntityProperty(item.Value.Kudos));
             }
+            results.Add("snooze", new EntityProperty(_isSnoozed));
 
             return results;
         }
@@ -107,6 +114,11 @@ namespace Upchurch.Ingress.Infrastructure
         public void SaveScores(int checkpoint, CpScore cpScore)
         {
             _scores[checkpoint] = cpScore;
+        }
+
+        public void SetSnooze(bool isSnoozed)
+        {
+            _isSnoozed = isSnoozed;
         }
     }
 }

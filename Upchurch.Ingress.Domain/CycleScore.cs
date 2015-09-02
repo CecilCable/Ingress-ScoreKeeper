@@ -64,6 +64,10 @@ namespace Upchurch.Ingress.Domain
             }
             var finalScoreProjection = overallScore.FinalScoreProjection();
             var checkpointsLeft = overallScore.CheckPointsLeft;
+            if (IsSnoozed)
+            {
+                yield return "Scoring is snoozed.";
+            }
             if (displayLastCp && overallScore.LastCp!=0)
             {
                 yield return string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", overallScore.LastCp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore);
@@ -182,36 +186,23 @@ namespace Upchurch.Ingress.Domain
         /// </remarks>
         public CycleIdentifier Cycle { get; set; }
 
+        public bool IsSnoozed { get; private set; }
+
         /// <summary>
         ///     Cycle with checpoint scores
         /// </summary>
         /// <param name="cycleIdentifier"></param>
         /// <param name="timestampTicks"></param>
+        /// <param name="isSnoozed"></param>
         /// <param name="scores"></param>
-        public CycleScore(CycleIdentifier cycleIdentifier, long timestampTicks, params KeyValuePair<int, CpScore>[] scores)
+        public CycleScore(CycleIdentifier cycleIdentifier, long timestampTicks, bool isSnoozed, params KeyValuePair<int, CpScore>[] scores)
         {
             _timestampTicks = timestampTicks;
             Cycle = cycleIdentifier;
-            
+            IsSnoozed = isSnoozed;
             _scores = scores.ToDictionary(score => score.Key, val=>val.Value);
         }
-        /*
-        public MissingCps CurrentMissingCps()
-        {
-            var currentCp = CheckPoint.Current();
-            var cpMax = Cycle.Id == currentCp.Cycle.Id ? currentCp.CP : 35;
-            var missing = new MissingCps(_timestamp.Ticks);
-            for (var i = 1; i <= cpMax; i++)
-            {
-                if (_scores.ContainsKey(i))
-                {
-                    continue;
-                }
-                missing.Cps.Add(new CpScore(i, 0, 0));
-            }
-            return missing;
-        }
-         * */
+
 
         public bool HasMissingCPs()
         {
@@ -312,8 +303,10 @@ namespace Upchurch.Ingress.Domain
             return string.Join("\n", Summary(true));
         }
 
-        
 
-    
+        public bool SetSnooze(bool isSnooze, ICycleScoreUpdater scoreUpdater)
+        {
+            return scoreUpdater.SetSnooze(Cycle, _timestampTicks, isSnooze);
+        }
     }
 }

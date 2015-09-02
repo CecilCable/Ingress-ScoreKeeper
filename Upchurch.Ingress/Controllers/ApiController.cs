@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Results;
 using RestSharp;
 using Upchurch.Ingress.Domain;
 using Upchurch.Ingress.Infrastructure;
@@ -96,6 +97,22 @@ namespace Upchurch.Ingress.Controllers
             return "OK";
         }
 
+        [Route("{cycleId:int}/{isSnooze:bool}")]
+        [HttpGet] //nothing actually posted?
+        public RedirectResult SetSnooze(int cycleId, bool isSnooze)
+        {
+
+            //Do you need to explicitly overwrite
+            //is it the same score?
+            //was it okay?
+            var cycle = GetScoreForCycle(cycleId);
+
+            var response = cycle.SetSnooze(isSnooze, _scoreUpdater);
+
+            return Redirect(string.Format("http://{0}/?{1}", Request.RequestUri.Host.ToLower(), response));
+
+        }
+
         [Route("{cycleId:int}/Summary")]
         [HttpGet]
         public IEnumerable<string> Summary(int cycleId)
@@ -114,6 +131,16 @@ namespace Upchurch.Ingress.Controllers
 
         private void PostToSlack(CycleScore currentCycle)
         {
+            if (currentCycle.IsSnoozed)
+            {
+                var cp = CheckPoint.Current();
+                if (cp.IsFirstMessageOfDay())
+                {
+                    var snoozeMessage = string.Format("Shhh. Cycle bot is sleeping. Goto http://{0}/api/{1}/false to un-snooze me. I'll wake up again at {2}", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cp.NextUnsnoozeTime());
+                    _slackSender.Send(snoozeMessage);
+                    return;
+                }
+            }
             var missingCPs = currentCycle.MissingCPs().ToArray();
 
             if (missingCPs.Length == 0)
@@ -128,11 +155,22 @@ namespace Upchurch.Ingress.Controllers
                 return;
             }
 
-            var cpStrings = new string[missingCPs.Length];
+            var cpString = ConvertToDashAndCommaString(missingCPs);
 
-            for (var i = 0; i < missingCPs.Length; i++)
+            var manymissing = string.Format("Missing CPs {2}. Goto http://{0}/#/{1} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cpString);
+            _slackSender.Send(manymissing);
+
+
+
+        }
+
+        private static string ConvertToDashAndCommaString(IReadOnlyList<CpStatus> missingCPs)
+        {
+            var cpStrings = new string[missingCPs.Count];
+
+            for (var i = 0; i < missingCPs.Count; i++)
             {
-                if (i != 0 && i + 1 != missingCPs.Length)
+                if (i != 0 && i + 1 != missingCPs.Count)
                 {
                     if (missingCPs[i - 1].Cp + 1 == missingCPs[i].Cp && missingCPs[i + 1].Cp - 1 == missingCPs[i].Cp)
                     {
@@ -150,20 +188,13 @@ namespace Upchurch.Ingress.Controllers
                 {
                     continue;
                 }
-                if (cpStrings[i] != "-" && cpStrings[i-1]!="-")
+                if (cpStrings[i] != "-" && cpStrings[i - 1] != "-")
                 {
                     cpString += ",";
                 }
                 cpString += cpStrings[i];
             }
-
-            var manymissing = string.Format("Missing CPs {2}. Goto http://{0}/#/{1} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cpString);
-            _slackSender.Send(manymissing);
-
-
-
+            return cpString;
         }
-
-       
     }
 }

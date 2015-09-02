@@ -78,6 +78,22 @@ namespace Upchurch.Ingress.Infrastructure
             //else it's not the right timestamp
         }
 
+        public bool SetSnooze(CycleIdentifier cycle, long timestampTicks, bool isSnooze)
+        {
+            var scoreEntity = _cycleScoresCache[cycle.Id];
+            if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
+            {
+                return false;
+            }
+            scoreEntity.SetSnooze(isSnooze);
+            //this does update scoreEntity.TimeStamp
+            _cloudTable.Execute(scoreEntity.Timestamp == DateTimeOffset.MinValue ? TableOperation.Insert(scoreEntity) : TableOperation.Replace(scoreEntity));
+            //should we check the _cloudTable.Execute().HttpStatusCode ??
+            return true;
+            //what is the new TimeStamp??
+            //else it's not the right timestamp
+        }
+
        
     }
 }

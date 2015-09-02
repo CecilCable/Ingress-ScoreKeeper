@@ -76,6 +76,27 @@ namespace Upchurch.Ingress.Tests
         }
 
         [TestMethod]
+        public void DateTimeAmICrazy()
+        {
+            
+            //var cp = new CheckPoint(DateTime.Now.AddHours(1));//1AM
+            //Console.WriteLine(cp.CP);
+            //Console.WriteLine(cp.Cycle.Id);
+            //Console.WriteLine(cp.DateTime);
+            //Console.WriteLine(cp.IsFirstMessageOfDay());
+            //Console.WriteLine(cp.NextUnsnoozeTime());
+
+
+            var cp = new CheckPoint(DateTime.UtcNow.AddHours(1));//1AM
+            Console.WriteLine(cp.CP);
+            Console.WriteLine(cp.Cycle.Id);
+        Console.WriteLine(cp.DateTime);
+        Console.WriteLine(cp.IsFirstMessageOfDay());
+        Console.WriteLine(cp.NextUnsnoozeTime());
+            
+        }
+
+        [TestMethod]
         public void RightBeforeEndOfCycle()
         {
             var date = new DateTime(2015, 6, 9, 19, 59, 59, DateTimeKind.Utc);//begininng of next cycle

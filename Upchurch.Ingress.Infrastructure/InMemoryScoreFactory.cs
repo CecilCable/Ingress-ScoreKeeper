@@ -22,7 +22,7 @@ namespace Upchurch.Ingress.Infrastructure
             if (!_cycleScores.TryGetValue(cycle.Id, out cycleScore))
             {
                 var timestamp = DateTimeOffset.Now;
-                cycleScore = new CycleScore(cycle, timestamp.Ticks);
+                cycleScore = new CycleScore(cycle, timestamp.Ticks,false);
                 _timeStamps[cycle.Id] = timestamp.Ticks;
                 _cycleScores[cycle.Id] = cycleScore;
             }
@@ -40,7 +40,9 @@ namespace Upchurch.Ingress.Infrastructure
             return false;
         }
 
-        
-
+        public bool SetSnooze(CycleIdentifier cycle, long timestampTicks, bool isSnooze)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
