@@ -131,15 +131,20 @@ namespace Upchurch.Ingress.Controllers
 
         private void PostToSlack(CycleScore currentCycle)
         {
+            var cp = CheckPoint.Current();
             if (currentCycle.IsSnoozed)
             {
-                var cp = CheckPoint.Current();
+                
                 if (cp.IsFirstMessageOfDay())
                 {
                     var snoozeMessage = string.Format("Shhh. Cycle bot is sleeping.\nGoto http://{0}/api/{1}/false to un-snooze me.\nIf you really want to know the score summary goto http://{0}/#/{1}\nI'll wake up again at {2}.", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cp.NextUnsnoozeTime());
                     _slackSender.Send(snoozeMessage);
-                    return;
                 }
+                return;
+            }
+            if (currentCycle.Cycle.Id != cp.Cycle.Id)
+            {
+                return;
             }
             var missingCPs = currentCycle.MissingCPs().ToArray();
 
@@ -150,7 +155,7 @@ namespace Upchurch.Ingress.Controllers
             }
             if (missingCPs.Length == 1)
             {
-                var missingMessages = string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0]);
+                var missingMessages = string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0].Cp);
                 _slackSender.Send(missingMessages);
                 return;
             }
