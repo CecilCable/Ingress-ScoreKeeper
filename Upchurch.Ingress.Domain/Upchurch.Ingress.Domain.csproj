@@ -47,6 +47,8 @@
     <Compile Include="ICycleIdentifier.cs" />
     <Compile Include="CycleScore.cs" />
     <Compile Include="ICycleScoreUpdater.cs" />
+    <Compile Include="Intel\Score.cs" />
+    <Compile Include="Intel\Result.cs" />
     <Compile Include="MissingScore.cs" />
     <Compile Include="OverallScore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

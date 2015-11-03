@@ -11,7 +11,7 @@ namespace Upchurch.Ingress.Tests
         [TestMethod]
         public void MissingCheckpoints()
         {
-            var score = new CycleScore(CheckPoint.Current().Cycle,DateTimeOffset.Now.Ticks,false);
+            var score = new CycleScore(CheckPoint.Current().Cycle,DateTimeOffset.Now.Ticks,false, CheckPoint.Current());
             foreach (var cp in score.MissingCPs())
             {
                 Console.WriteLine(cp.Cp);
@@ -27,7 +27,7 @@ namespace Upchurch.Ingress.Tests
         public void CheckMessage()
         {
             var current = CheckPoint.Current();
-            var score = new CycleScore(current.Cycle,DateTimeOffset.Now.Ticks,false);
+            var score = new CycleScore(current.Cycle,DateTimeOffset.Now.Ticks,false, CheckPoint.Current());
             var updater = new Mock<ICycleScoreUpdater>().Object;
 
             score.SetScore(1,new UpdateScore {EnlightenedScore = 1000,ResistanceScore = 0}, updater);
@@ -45,7 +45,7 @@ namespace Upchurch.Ingress.Tests
         public void SkipCP()
         {
             var cp = CheckPoint.Current();
-            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks,false);
+            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks,false, CheckPoint.Current());
             var updater = new Mock<ICycleScoreUpdater>().Object;
 
             score.SetScore(2, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, updater);
@@ -61,7 +61,7 @@ namespace Upchurch.Ingress.Tests
         public void setcp0()
         {
             var cp = new CheckPoint(new DateTime(2015, 6, 2, 13, 0, 0, DateTimeKind.Utc));
-            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks,false);
+            var score = new CycleScore(cp.Cycle, DateTimeOffset.Now.Ticks,false, CheckPoint.Current());
             score.SetScore(0, new UpdateScore { EnlightenedScore = 1000, ResistanceScore = 0 }, new Mock<ICycleScoreUpdater>().Object);
             foreach (var summary in score.Summary(false))
             {

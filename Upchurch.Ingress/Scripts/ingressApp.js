@@ -66,6 +66,15 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     });
                 return deferred.promise;
             };
+
+            this.setScoreFromJson = function (cycleId, intelJson, timeStamp) {
+                var deferred = $q.defer();
+                $http.post("/api/" + cycleId, { intelJson: intelJson, timeStamp: timeStamp })
+                    .success(function (result) {
+                        deferred.resolve(result);
+                    });
+                return deferred.promise;
+            };
         }
     ])
     .controller("overallController", [
@@ -222,23 +231,23 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     controller: "findCurrentCycle"
                 })
                 .state("index", {
-                    templateUrl: "/angular",
+                    templateUrl: "/angular.html",
                     abstract: true
                 })
                 .state("index.overallScore", {
                     url: "/{cycleId:[0-9]*}",
                     views: {
                         "overallScore": {
-                            templateUrl: "/OverallScore",
+                            templateUrl: "/OverallScore.html",
                             controller: "overallController"
                         },
                         "scores": {
-                            templateUrl: "/Scores",
+                            templateUrl: "/Scores.html",
                             controller: "scoresController"
 
                         },
                         "summary": {
-                            templateUrl: "/Summary",
+                            templateUrl: "/Summary.html",
                             controller: "summaryController"
                         }
                     }
@@ -246,7 +255,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                 .state("update35", {
                     url: "/{cycleId:[0-9]*}/35",
                     controller: "update35",
-                    templateUrl: "/update35",
+                    templateUrl: "/update35.html",
                     resolve: {
                         score: function ($stateParams, restService, $q) {
                             var promise = $q.defer();
@@ -263,7 +272,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                 .state("update", {
                     url: "/{cycleId:[0-9]*}/{checkpoint:[0-9]*}",
                     controller: "update",
-                    templateUrl: "/update",
+                    templateUrl: "/update.html",
                     resolve: {
                         score: function ($stateParams, restService, $q) {
                             var promise = $q.defer();

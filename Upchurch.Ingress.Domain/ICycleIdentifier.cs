@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-
-namespace Upchurch.Ingress.Domain
+﻿namespace Upchurch.Ingress.Domain
 {
     public class CycleIdentifier
     {

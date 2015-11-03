@@ -33,7 +33,7 @@ namespace Upchurch.Ingress.Infrastructure
         public CycleScore CycleScore()
         {
             //use a readonly dictionary instead?
-            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp.Ticks, _isSnoozed, _scores.ToArray());
+            return new CycleScore(new CycleIdentifier(int.Parse(RowKey)), Timestamp.Ticks, _isSnoozed, CheckPoint.Current(), _scores.ToArray());
         }
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using Upchurch.Ingress.Domain.Intel;
 
 namespace Upchurch.Ingress.Domain
 {
@@ -13,21 +15,6 @@ namespace Upchurch.Ingress.Domain
 
         public IEnumerable<CpStatus> AllCPs()
         {
-            var currentCp = CheckPoint.Current();
-            int cpMax;
-            if (Cycle.Id == currentCp.Cycle.Id)
-            {
-                cpMax = currentCp.CP;
-            }
-            else if (Cycle.Id < currentCp.Cycle.Id)
-            {
-                cpMax = 35;
-            }
-            else
-            {
-                cpMax = 0;
-            }
-
             for (var i = 1; i <= 35; i++)
             {
                 CpScore score;
@@ -36,7 +23,7 @@ namespace Upchurch.Ingress.Domain
                     yield return new RecordedScore(score,Cycle,i);
                     continue;
                 }
-                if (i <= cpMax)
+                if (i <= _maxCheckPoint)
                 {
                     yield return new MissingScore(i, Cycle);
                     continue;
@@ -53,13 +40,19 @@ namespace Upchurch.Ingress.Domain
         /// <returns></returns>
         public IEnumerable<string> Summary(bool displayLastCp)
         {
-
-
             var overallScore = OverallScore();
             var latestCpScore = overallScore.LastCpScore;
             if (latestCpScore == null)
             {
-                yield return "No scores recorded. Cycle has not started.";
+                if (_maxCheckPoint == 0)
+                {
+                    yield return "No scores recorded. Cycle has not started.";
+                }
+                else
+                {
+                    yield return "No scores recorded.";
+                }
+                
                 yield break;
             }
             var finalScoreProjection = overallScore.FinalScoreProjection();
@@ -70,13 +63,13 @@ namespace Upchurch.Ingress.Domain
             }
             if (displayLastCp && overallScore.LastCp!=0)
             {
-                yield return string.Format("CP {0}: Enlightened:{1:n0} Resistance:{2:n0}", overallScore.LastCp, latestCpScore.EnlightenedScore, latestCpScore.ResistanceScore);
+                yield return $"CP {overallScore.LastCp}: Enlightened:{latestCpScore.EnlightenedScore:n0} Resistance:{latestCpScore.ResistanceScore:n0}";
             }
             //tie game. So unlikely to happen. Except after the 35th checkpoint.
             if (overallScore.EnlightenedScore == overallScore.ResistanceScore)
             {
                 //overallScore.ResistanceScoreTotal == overallScore.EnlightenedScoreTotal check this instead ???
-                yield return string.Format("The score is tied {0:n0} to {1:n0}", overallScore.EnlightenedScore, overallScore.ResistanceScore);
+                yield return $"The score is tied {overallScore.EnlightenedScore:n0} to {overallScore.ResistanceScore:n0}";
                 if (checkpointsLeft == 1)
                 {
                     yield return "Who ever gets more MUs in the last CP wins the cycle.";
@@ -85,14 +78,14 @@ namespace Upchurch.Ingress.Domain
                 {
                     if (latestCpScore.ResistanceScore > latestCpScore.EnlightenedScore)
                     {
-                        yield return string.Format("We won the last CP.");
+                        yield return "We won the last CP.";
                     }
                     else if (latestCpScore.ResistanceScore < latestCpScore.EnlightenedScore)
                     {
-                        yield return string.Format("Enlightened won the last CP.");
+                        yield return "Enlightened won the last CP.";
                     }
 
-                    yield return string.Format("Who ever gets more MUs in the last {0} CPs wins the cycle.", checkpointsLeft);
+                    yield return $"Who ever gets more MUs in the last {checkpointsLeft} CPs wins the cycle.";
                 }
 
                 yield break;
@@ -101,13 +94,11 @@ namespace Upchurch.Ingress.Domain
             {
                 if (overallScore.EnlightenedScore > overallScore.ResistanceScore)
                 {
-                  //  overallScore.cyclesWon--;
-                    yield return string.Format("We lost the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore/*, overallScore.cyclesWon*-1*/);
+                    yield return $"We lost the cycle {overallScore.ResistanceScore:n0} to {overallScore.EnlightenedScore:n0}. A field of {overallScore.EnlightenedScoreTotal- overallScore.ResistanceScoreTotal:n0} MUs would have won the cycle.";
                 }
                 if (overallScore.EnlightenedScore < overallScore.ResistanceScore)
                 {
-                    //overallScore.cyclesWon++;
-                    yield return string.Format("We won the cycle {0:n0} to {1:n0}!", overallScore.ResistanceScore, overallScore.EnlightenedScore/*, overallScore.cyclesWon*/);
+                    yield return $"We won the cycle {overallScore.ResistanceScore:n0} to {overallScore.EnlightenedScore:n0}!. A field of {overallScore.ResistanceScoreTotal- overallScore.EnlightenedScoreTotal :n0} MUs would have won the cycle for the Enlightened.";
                 }
                 yield break;
 
@@ -117,31 +108,23 @@ namespace Upchurch.Ingress.Domain
             //resistance winning
             if (overallScore.ResistanceScoreTotal > overallScore.EnlightenedScoreTotal)
             {
-                yield return string.Format("We are winning the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+                yield return $"We are winning the cycle {overallScore.ResistanceScore:n0} to {overallScore.EnlightenedScore:n0}";
                 if (checkpointsLeft == 1)
                 {
-                    yield return string.Format("Enlightened would need to beat us in the last CP by {0:n0} MUs to win the cycle", overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal);
+                    yield return $"Enlightened would need to beat us in the last CP by {overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal:n0} MUs to win the cycle";
                 }
                 else
                 {
-                    yield return string.Format("Enlightened would need beat our score by {0:n0} MUs in 1 CP or beat us by {1:n0} MUs in the remaining {2} CPs to win"
-                                               , overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal
-                                               , (overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal)/checkpointsLeft
-                                               , checkpointsLeft);
+                    yield return $"Enlightened would need beat our score by {overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal:n0} MUs in 1 CP or beat us by {(overallScore.ResistanceScoreTotal - overallScore.EnlightenedScoreTotal)/checkpointsLeft:n0} MUs in the remaining {checkpointsLeft} CPs to win";
 
 
                     if (finalScoreProjection.CpsToLeadChange.HasValue)
                     {
-                        yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0} with the lead changing in {2} CPs",
-                                                   finalScoreProjection.FinalEnlightenedScore,
-                                                   finalScoreProjection.FinalResistanceScore,
-                                                   finalScoreProjection.CpsToLeadChange.Value);
+                        yield return $"If cp scores remain unchanged the score at the end of the cycle will be Enlightened {finalScoreProjection.FinalEnlightenedScore:n0} Resistance {finalScoreProjection.FinalResistanceScore:n0} with the lead changing in {finalScoreProjection.CpsToLeadChange.Value} CPs";
                     }
                     else
                     {
-                        yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0}",
-                                                   finalScoreProjection.FinalEnlightenedScore,
-                                                   finalScoreProjection.FinalResistanceScore);
+                        yield return $"If cp scores remain unchanged the score at the end of the cycle will be Enlightened {finalScoreProjection.FinalEnlightenedScore:n0} Resistance {finalScoreProjection.FinalResistanceScore:n0}";
                     }
                 }
                 yield break;
@@ -149,34 +132,27 @@ namespace Upchurch.Ingress.Domain
             
             //enlightened winning
             //resistanceScoreTotal < enlightenedScoreTotal
-            yield return string.Format("We are Losing the cycle {0:n0} to {1:n0}", overallScore.ResistanceScore, overallScore.EnlightenedScore);
+            yield return $"We are Losing the cycle {overallScore.ResistanceScore:n0} to {overallScore.EnlightenedScore:n0}";
             if (checkpointsLeft == 1)
             {
-                yield return string.Format("We need to beat the enlightened score by {0:n0} MUs in the last CP", overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal);
+                yield return $"We need to beat the enlightened score by {overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal:n0} MUs in the last CP";
             }
             else
             {
-                yield return string.Format("We need to beat the enlightened by {0:n0} MUs in 1 CP or beat them by {1:n0} MUs in the remaining {2} CPs to win"
-                                           , overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal
-                                           , (overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal)/checkpointsLeft
-                                           , checkpointsLeft
-                    );
+                yield return $"We need to beat the enlightened by {overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal:n0} MUs in 1 CP or beat them by {(overallScore.EnlightenedScoreTotal - overallScore.ResistanceScoreTotal)/checkpointsLeft:n0} MUs in the remaining {checkpointsLeft} CPs to win";
                 if (finalScoreProjection.CpsToLeadChange.HasValue)
                 {
-                    yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0} with the lead changing in {2} CPs",
-                                               finalScoreProjection.FinalEnlightenedScore,
-                                               finalScoreProjection.FinalResistanceScore,
-                                               finalScoreProjection.CpsToLeadChange.Value);
+                    yield return $"If cp scores remain unchanged the score at the end of the cycle will be Enlightened {finalScoreProjection.FinalEnlightenedScore:n0} Resistance {finalScoreProjection.FinalResistanceScore:n0} with the lead changing in {finalScoreProjection.CpsToLeadChange.Value} CPs";
                 }
                 else
                 {
-                    yield return string.Format("If cp scores remain unchanged the score at the end of the cycle will be Enlightened {0:n0} Resistance {1:n0}",
-                                               finalScoreProjection.FinalEnlightenedScore,
-                                               finalScoreProjection.FinalResistanceScore);
+                    yield return $"If cp scores remain unchanged the score at the end of the cycle will be Enlightened {finalScoreProjection.FinalEnlightenedScore:n0} Resistance {finalScoreProjection.FinalResistanceScore:n0}";
                 }
             }
 
         }
+
+        
 
         /// <summary>
         ///     only set during deserialization
@@ -186,7 +162,8 @@ namespace Upchurch.Ingress.Domain
         /// </remarks>
         public CycleIdentifier Cycle { get; set; }
 
-        public bool IsSnoozed { get; private set; }
+        public bool IsSnoozed { get; }
+        private readonly int _maxCheckPoint;
 
         /// <summary>
         ///     Cycle with checpoint scores
@@ -194,13 +171,28 @@ namespace Upchurch.Ingress.Domain
         /// <param name="cycleIdentifier"></param>
         /// <param name="timestampTicks"></param>
         /// <param name="isSnoozed"></param>
+        /// <param name="currentCheckPoint"></param>
         /// <param name="scores"></param>
-        public CycleScore(CycleIdentifier cycleIdentifier, long timestampTicks, bool isSnoozed, params KeyValuePair<int, CpScore>[] scores)
+        public CycleScore(CycleIdentifier cycleIdentifier, long timestampTicks, bool isSnoozed, CheckPoint currentCheckPoint, params KeyValuePair<int, CpScore>[] scores)
         {
             _timestampTicks = timestampTicks;
             Cycle = cycleIdentifier;
             IsSnoozed = isSnoozed;
             _scores = scores.ToDictionary(score => score.Key, val=>val.Value);
+
+
+            if (Cycle.Id > currentCheckPoint.Cycle.Id)
+            {
+                _maxCheckPoint = 0;
+            }
+            else if (Cycle.Id == currentCheckPoint.Cycle.Id)
+            {
+                _maxCheckPoint = currentCheckPoint.CP;
+            }
+            else
+            {
+                _maxCheckPoint = 35;//past cycles
+            }
         }
 
 
@@ -232,15 +224,10 @@ namespace Upchurch.Ingress.Domain
         /// </summary>
         /// <param name="cpScore"></param>
         /// <param name="checkpoint"></param>
-        /// <param name="currentCheckPoint"></param>
         /// <returns></returns>
-        public string IsUpdatable(UpdateScore cpScore, int checkpoint, CheckPoint currentCheckPoint)
+        public string IsUpdatable(UpdateScore cpScore, int checkpoint)
         {
-            if (Cycle.Id > currentCheckPoint.Cycle.Id)
-            {
-                return "Cannot set a cycle that is in the future";
-            }
-            if (currentCheckPoint.Cycle.Id == Cycle.Id && checkpoint > currentCheckPoint.CP)
+            if (checkpoint > _maxCheckPoint)
             {
                 //only check this if the cycle is the same, else it's probably a previous cycle? Add some testing to explore this.
                 return "Cannot set a checkpoint that is in the future";
@@ -257,15 +244,28 @@ namespace Upchurch.Ingress.Domain
             return null;
         }
 
+        public string IsUpdatable(Result score, long timeStamp)
+        {
+            if (score.regionName != "AM02-KILO-00")
+            {
+                return "scores are not for the local region";
+            }
+            if (timeStamp != _timestampTicks)
+            {
+                return "timestamp invalid";
+            }
+            return null;
+        }
+
         public OverallScore OverallScore()
         {
             if (_scores.Count == 0)
             {
                 return new OverallScore();
             }
-            var lastCP = _scores.Keys.Max();
-            var latestCp = _scores[lastCP];
-            return new OverallScore(_scores.Values, latestCp, lastCP);
+            var lastCp = _scores.Keys.Max();
+            var latestCp = _scores[lastCp];
+            return new OverallScore(_scores.Values, latestCp, lastCp);
         }
 
         /// <summary>
@@ -287,15 +287,35 @@ namespace Upchurch.Ingress.Domain
         /// <summary>
         /// </summary>
         /// <param name="checkpoint"></param>
-        /// <param name="cpScore"></param>
+        /// <param name="updateScore"></param>
         /// <param name="update"></param>
         /// <returns></returns>
         public bool SetScore(int checkpoint, UpdateScore updateScore, ICycleScoreUpdater update)
         {
             var cpScore = new CpScore(updateScore.ResistanceScore.Value, updateScore.EnlightenedScore.Value, updateScore.Kudos);
             _scores[checkpoint] = cpScore;
-            //this saves it
+            //this persists it
             return update.UpdateScore(Cycle, checkpoint, long.Parse(updateScore.TimeStamp), cpScore);
+        }
+
+        public bool SetScore(IEnumerable<KeyValuePair<int, CpScore>> scores, long timeStamp, ICycleScoreUpdater update)
+        {
+            foreach (var score in scores)
+            {
+                if (!_scores.ContainsKey(score.Key))
+                {
+                    _scores.Add(score.Key, score.Value);
+                    continue;
+                }
+                if (_scores[score.Key].EnlightenedScore != score.Value.EnlightenedScore || _scores[score.Key].ResistanceScore != score.Value.ResistanceScore)
+                {
+                    _scores[score.Key] = score.Value;
+                }
+                
+            }
+            
+            //this persists it
+            return update.UpdateScore(Cycle, timeStamp, new ReadOnlyDictionary<int, CpScore>(_scores));
         }
 
         public override string ToString()

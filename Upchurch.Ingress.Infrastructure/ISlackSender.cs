@@ -1,6 +1,4 @@
-﻿using RestSharp;
-
-namespace Upchurch.Ingress.Infrastructure
+﻿namespace Upchurch.Ingress.Infrastructure
 {
     public interface ISlackSender
     {

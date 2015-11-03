@@ -69,7 +69,7 @@ namespace Upchurch.Ingress.Infrastructure
             {
                 return false;
             }
-            scoreEntity.SaveScores(checkpoint,cpScore);
+            scoreEntity.SaveScores(checkpoint, cpScore);
             //this does update scoreEntity.TimeStamp
             _cloudTable.Execute(scoreEntity.Timestamp == DateTimeOffset.MinValue ? TableOperation.Insert(scoreEntity) : TableOperation.Replace(scoreEntity));
             //should we check the _cloudTable.Execute().HttpStatusCode ??
@@ -77,6 +77,31 @@ namespace Upchurch.Ingress.Infrastructure
             //what is the new TimeStamp??
             //else it's not the right timestamp
         }
+
+        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, IReadOnlyDictionary<int,CpScore> cpScores)
+        {
+            var scoreEntity = _cycleScoresCache[cycle.Id];
+            if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
+            {
+                return false;
+            }
+            if (cpScores.Count == 0)
+            {
+                return false;
+            }
+            foreach (var keyValuePair in cpScores)
+            {
+                scoreEntity.SaveScores(keyValuePair.Key, keyValuePair.Value);
+            }
+
+            //this does update scoreEntity.TimeStamp
+            _cloudTable.Execute(scoreEntity.Timestamp == DateTimeOffset.MinValue ? TableOperation.Insert(scoreEntity) : TableOperation.Replace(scoreEntity));
+            //should we check the _cloudTable.Execute().HttpStatusCode ??
+            return true;
+            //what is the new TimeStamp??
+            //else it's not the right timestamp
+        }
+        
 
         public bool SetSnooze(CycleIdentifier cycle, long timestampTicks, bool isSnooze)
         {
@@ -94,6 +119,6 @@ namespace Upchurch.Ingress.Infrastructure
             //else it's not the right timestamp
         }
 
-       
+        
     }
 }

@@ -78,7 +78,7 @@ namespace Upchurch.Ingress.Controllers
             //is it the same score?
             //was it okay?
             var cycle = GetScoreForCycle(cycleId);
-            var reason = cycle.IsUpdatable(newScore, checkpoint, CheckPoint.Current());
+            var reason = cycle.IsUpdatable(newScore, checkpoint);
             if (!string.IsNullOrEmpty(reason))
             {
                 return reason;
@@ -93,6 +93,54 @@ namespace Upchurch.Ingress.Controllers
                 PostToSlack(cycle);
                 return "post to slack";
             }
+
+            return "OK";
+        }
+
+        [Route("{cycleId:int}")]
+        [HttpPost]
+        public string SetScore(int cycleId, string intelJson, string timeStamp)
+        {
+            var parser = new RawScoreParser();
+            var score = parser.Parse(intelJson);
+            var cycle = GetScoreForCycle(cycleId);
+            var longtimeStamp = long.Parse(timeStamp);
+            var reason = cycle.IsUpdatable(score, longtimeStamp);
+            if (!string.IsNullOrEmpty(reason))
+            {
+                return reason;
+            }
+            if (!cycle.SetScore(score.Generate(), longtimeStamp, _scoreUpdater))
+            {
+                return "SetScore Failed. Probably someone else updated it already.";
+            }
+
+            if (!cycle.HasMissingCPs())
+            {
+                PostToSlack(cycle);
+                return "post to slack";
+            }
+
+            return "OK";
+            ////Do you need to explicitly overwrite
+            ////is it the same score?
+            ////was it okay?
+            //var cycle = GetScoreForCycle(cycleId);
+            //var reason = cycle.IsUpdatable(newScore, checkpoint);
+            //if (!string.IsNullOrEmpty(reason))
+            //{
+            //    return reason;
+            //}
+            //if (!cycle.SetScore(checkpoint, newScore, _scoreUpdater))
+            //{
+            //    return "SetScore Failed. Probably someone else updated it already.";
+            //}
+
+            //if (!cycle.HasMissingCPs())
+            //{
+            //    PostToSlack(cycle);
+            //    return "post to slack";
+            //}
 
             return "OK";
         }
