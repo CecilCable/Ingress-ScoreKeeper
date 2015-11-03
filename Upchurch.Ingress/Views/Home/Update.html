@@ -1,4 +1,4 @@
-﻿<h2>Update CP {{newScore.Cp}}</h2>
+﻿<h2>Update CP {{$stateParams.checkpoint}}</h2>
 
 <div class="form-group">
     <label for="EnlightenedScore">Enlightened Score</label>
@@ -13,6 +13,8 @@
     <input type="text" class="form-control" id="Kudos" placeholder="Kudos to" ng-model="newScore.Kudos">
 </div>
 <a role="button" class="btn btn-warning" ui-sref="index.overallScore({cycleId:$stateParams.cycleId})">Cancel</a>
+
+
 
 <button type="button" class="btn btn-primary" ng-click="submit()">Submit</button>
 
