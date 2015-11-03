@@ -13,7 +13,7 @@ namespace Upchurch.Ingress
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register); //API
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-            RouteConfig.RegisterRoutes(RouteTable.Routes); //Routes
+            //RouteConfig.RegisterRoutes(RouteTable.Routes); //Routes
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
     }
