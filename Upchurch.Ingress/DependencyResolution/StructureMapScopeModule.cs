@@ -1,10 +1,8 @@
+using System.Web;
+using StructureMap.Web.Pipeline;
+using Upchurch.Ingress.App_Start;
+
 namespace Upchurch.Ingress.DependencyResolution {
-    using System.Web;
-
-    using Upchurch.Ingress.App_Start;
-
-    using StructureMap.Web.Pipeline;
-
     public class StructureMapScopeModule : IHttpModule {
         #region Public Methods and Operators
 

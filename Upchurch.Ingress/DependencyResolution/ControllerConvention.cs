@@ -15,15 +15,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.Web.Mvc;
+using StructureMap.Configuration.DSL;
+using StructureMap.Graph;
+using StructureMap.Pipeline;
+using StructureMap.TypeRules;
+
 namespace Upchurch.Ingress.DependencyResolution {
-    using System;
-    using System.Web.Mvc;
-
-    using StructureMap.Configuration.DSL;
-    using StructureMap.Graph;
-    using StructureMap.Pipeline;
-    using StructureMap.TypeRules;
-
     public class ControllerConvention : IRegistrationConvention {
         #region Public Methods and Operators
 

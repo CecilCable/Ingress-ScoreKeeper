@@ -15,7 +15,6 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System.Web.Http;
 using Upchurch.Ingress.DependencyResolution;
 
 [assembly: WebActivatorEx.PostApplicationStartMethod(typeof(Upchurch.Ingress.App_Start.StructuremapWebApi), "Start")]

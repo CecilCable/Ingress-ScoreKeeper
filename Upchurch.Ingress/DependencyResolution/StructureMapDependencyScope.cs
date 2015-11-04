@@ -15,16 +15,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using Microsoft.Practices.ServiceLocation;
+using StructureMap;
+
 namespace Upchurch.Ingress.DependencyResolution {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Web;
-
-    using Microsoft.Practices.ServiceLocation;
-
-    using StructureMap;
-	
     /// <summary>
     /// The structure map dependency scope.
     /// </summary>

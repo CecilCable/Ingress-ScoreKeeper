@@ -15,10 +15,10 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using StructureMap.Configuration.DSL;
+using StructureMap.Graph;
+
 namespace Upchurch.Ingress.DependencyResolution {
-    using StructureMap.Configuration.DSL;
-    using StructureMap.Graph;
-	
     public class DefaultRegistry : Registry {
         #region Constructors and Destructors
 
