@@ -31,6 +31,11 @@ namespace Upchurch.Ingress.Infrastructure
 
         public bool UpdateScore(CycleIdentifier cycle, int checkpoint, long timestampTicks, CpScore cpScore)
         {
+            return UpdateScore(cycle, timestampTicks, new KeyValuePair<int, CpScore>(checkpoint,cpScore));
+        }
+
+        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
+        {
             if (_timeStamps[cycle.Id] == timestampTicks)
             {
                 //shouldn't need to update _cycleScores since the CycleScore is updated elsewhere. This method is for persisting somewhere
@@ -40,14 +45,10 @@ namespace Upchurch.Ingress.Infrastructure
             return false;
         }
 
-        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, IReadOnlyDictionary<int, CpScore> cpScores)
-        {
-            throw new NotImplementedException();
-        }
 
         public bool SetSnooze(CycleIdentifier cycle, long timestampTicks, bool isSnooze)
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 }

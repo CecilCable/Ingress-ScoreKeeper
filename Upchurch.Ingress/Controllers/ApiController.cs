@@ -8,6 +8,7 @@ using System.Web.Http.Results;
 using RestSharp;
 using Upchurch.Ingress.Domain;
 using Upchurch.Ingress.Infrastructure;
+using Upchurch.Ingress.Models;
 
 namespace Upchurch.Ingress.Controllers
 {
@@ -99,12 +100,12 @@ namespace Upchurch.Ingress.Controllers
 
         [Route("{cycleId:int}")]
         [HttpPost]
-        public string SetScore(int cycleId, string intelJson, string timeStamp)
+        public string SetScore(int cycleId, JsonIntel intelJson)
         {
             var parser = new RawScoreParser();
-            var score = parser.Parse(intelJson);
+            var score = parser.Parse(intelJson.Json);
             var cycle = GetScoreForCycle(cycleId);
-            var longtimeStamp = long.Parse(timeStamp);
+            var longtimeStamp = long.Parse(intelJson.TimeStamp);
             var reason = cycle.IsUpdatable(score, longtimeStamp);
             if (!string.IsNullOrEmpty(reason))
             {
@@ -112,7 +113,7 @@ namespace Upchurch.Ingress.Controllers
             }
             if (!cycle.SetScore(score.Generate(), longtimeStamp, _scoreUpdater))
             {
-                return "SetScore Failed. Probably someone else updated it already.";
+                return "SetScore Failed. Someone else updated it OR all CPs are already updated";
             }
 
             if (!cycle.HasMissingCPs())

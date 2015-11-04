@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Upchurch.Ingress.Domain.Intel;
 
@@ -300,22 +298,29 @@ namespace Upchurch.Ingress.Domain
 
         public bool SetScore(IEnumerable<KeyValuePair<int, CpScore>> scores, long timeStamp, ICycleScoreUpdater update)
         {
+            var updatedValues = new List<KeyValuePair<int, CpScore>>();
+
             foreach (var score in scores)
             {
-                if (!_scores.ContainsKey(score.Key))
+                CpScore oldscore;
+                if (_scores.TryGetValue(score.Key, out oldscore))
                 {
-                    _scores.Add(score.Key, score.Value);
-                    continue;
-                }
-                if (_scores[score.Key].EnlightenedScore != score.Value.EnlightenedScore || _scores[score.Key].ResistanceScore != score.Value.ResistanceScore)
-                {
-                    _scores[score.Key] = score.Value;
+                    if (oldscore.EnlightenedScore == score.Value.EnlightenedScore && oldscore.ResistanceScore == score.Value.ResistanceScore)
+                    {
+                        continue;
+                    }
                 }
                 
+                _scores[score.Key] = score.Value;
+                updatedValues.Add(score);
+            }
+            if (updatedValues.Count == 0)
+            {
+                return false;
             }
             
             //this persists it
-            return update.UpdateScore(Cycle, timeStamp, new ReadOnlyDictionary<int, CpScore>(_scores));
+            return update.UpdateScore(Cycle, timeStamp, updatedValues.ToArray());
         }
 
         public override string ToString()

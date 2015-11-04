@@ -4,7 +4,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
         "restService", "$state", function (restService, $state) {
             restService.getCurrentCycle().then(
                 function (cycleId) {
-                    $state.go("index.overallScore", {cycleId: cycleId});
+                    $state.go("cycle.overall", { cycleId: cycleId });
                 }
             );
         }
@@ -69,7 +69,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
 
             this.setScoreFromJson = function (cycleId, intelJson, timeStamp) {
                 var deferred = $q.defer();
-                $http.post("/api/" + cycleId, { intelJson: intelJson, timeStamp: timeStamp })
+                $http.post("/api/" + cycleId, { Json: intelJson, timeStamp: timeStamp })
                     .success(function (result) {
                         deferred.resolve(result);
                     });
@@ -79,7 +79,6 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
     ])
     .controller("overallController", [
         "$scope", "$stateParams", "restService", function ($scope, $stateParams, restService) {
-
             restService.getOverallScore($stateParams.cycleId).then(function (overallScore) {
                 $scope.overallScore = overallScore;
             });
@@ -98,6 +97,17 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
             restService.getSummary($stateParams.cycleId).then(function (summary) {
                 $scope.summary = summary;
             });
+        }
+    ])
+    .controller("jsonController", [
+        "$scope", "$stateParams", "restService","timeStamp", function ($scope, $stateParams, restService, timeStamp) {
+
+            $scope.submit = function () {
+                restService.setScoreFromJson($stateParams.cycleId, $scope.intelJson, timeStamp).then(function () {
+                    $state.go("cycle.overall");
+                });
+            }
+            
         }
     ])
     .controller("update", [
@@ -135,7 +145,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     TimeStamp: score.TimeStamp,
                     Kudos: $scope.newScore.Kudos
                 }).then(function () {
-                    $state.go("index.overallScore", {cycleId: $stateParams.cycleId});
+                    $state.go("cycle.overall");
                 });
             };
         }
@@ -151,7 +161,7 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
             $scope.submit = function () {
                 restService.setScore($stateParams.cycleId, 35, $scope.newScore)
                     .then(function () {
-                        $state.go("index.overallScore", { cycleId: $stateParams.cycleId });
+                        $state.go("cycle.overall");
                     });
             };
             var calculateScore = function (totalScoreSoFar, typedInFinalScore, cp35Score) {
@@ -230,25 +240,29 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                     url: "/",
                     controller: "findCurrentCycle"
                 })
-                .state("index", {
-                    templateUrl: "/angular.html",
+                .state("cycle", {
+                    url: "/{cycleId:[0-9]*}",
+                    templateUrl: "/cycle.html",
                     abstract: true
                 })
-                .state("index.overallScore", {
-                    url: "/{cycleId:[0-9]*}",
+                .state("cycle.overall", {
+                    url: "",
                     views: {
-                        "overallScore": {
-                            templateUrl: "/OverallScore.html",
-                            controller: "overallController"
+                        "": {
+                            templateUrl: "/overall.html"
                         },
-                        "scores": {
+                        "scores@cycle.overall": {//if you don't say '@cycle.overall' it looks in the parent template
                             templateUrl: "/Scores.html",
                             controller: "scoresController"
 
                         },
-                        "summary": {
+                        "summary@cycle.overall": {
                             templateUrl: "/Summary.html",
                             controller: "summaryController"
+                        },
+                        "overallScore@cycle.overall": {
+                            templateUrl: "/OverallScore.html",
+                            controller: "overallController"
                         }
                     }
                 })
@@ -269,8 +283,8 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                         }
                     }
                 })
-                .state("update", {
-                    url: "/{cycleId:[0-9]*}/{checkpoint:[0-9]*}",
+                .state("cycle.update", {
+                    url: "/{checkpoint:[0-9]*}",
                     controller: "update",
                     templateUrl: "/update.html",
                     resolve: {
@@ -278,6 +292,21 @@ angular.module("ingressApp", ["ui.router", "ui.bootstrap"])
                             var promise = $q.defer();
                             restService.getScoreForCp($stateParams.cycleId, $stateParams.checkpoint).then(function (score) {
                                 promise.resolve(score);
+                            });
+                            return promise.promise;
+                        }
+                    }
+                })
+                .state("cycle.json", {
+                    url: "/json",
+                    templateUrl: "/json.html",
+                    controller: "jsonController",
+                    resolve: {
+                        timeStamp: function ($stateParams, restService, $q) {
+                            var promise = $q.defer();
+                            //pull any checkpoint
+                            restService.getScoreForCp($stateParams.cycleId, 1).then(function (score) {
+                                promise.resolve(score.TimeStamp);
                             });
                             return promise.promise;
                         }

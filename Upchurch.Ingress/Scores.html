@@ -32,9 +32,7 @@
 </span>
 <span ng-show="score.Type=='Upchurch.Ingress.Domain.MissingScore'">
     <div class="col-md-3">
-        Missing. Click <a ui-sref="update(
-                                    {checkpoint:score.Cp
-                                    ,cycleId:$stateParams.cycleId})">here</a> to update it.
+        Missing. Click <a ui-sref="^.update({checkpoint:score.Cp})">here</a> to update it.
     </div>
 </span>
 <span ng-show="score.Type=='Upchurch.Ingress.Domain.FutureScore'">

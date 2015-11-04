@@ -64,28 +64,17 @@ namespace Upchurch.Ingress.Infrastructure
 
         public bool UpdateScore(CycleIdentifier cycle, int checkpoint, long timestampTicks, CpScore cpScore)
         {
-            var scoreEntity = _cycleScoresCache[cycle.Id];
-            if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
-            {
-                return false;
-            }
-            scoreEntity.SaveScores(checkpoint, cpScore);
-            //this does update scoreEntity.TimeStamp
-            _cloudTable.Execute(scoreEntity.Timestamp == DateTimeOffset.MinValue ? TableOperation.Insert(scoreEntity) : TableOperation.Replace(scoreEntity));
-            //should we check the _cloudTable.Execute().HttpStatusCode ??
-            return true;
-            //what is the new TimeStamp??
-            //else it's not the right timestamp
+            return UpdateScore(cycle, timestampTicks, new KeyValuePair<int, CpScore>(checkpoint, cpScore));
         }
 
-        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, IReadOnlyDictionary<int,CpScore> cpScores)
+        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
         {
             var scoreEntity = _cycleScoresCache[cycle.Id];
             if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
             {
                 return false;
             }
-            if (cpScores.Count == 0)
+            if (cpScores==null || cpScores.Length == 0)
             {
                 return false;
             }
