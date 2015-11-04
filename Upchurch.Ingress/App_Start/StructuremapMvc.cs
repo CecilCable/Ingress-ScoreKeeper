@@ -15,23 +15,18 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Web.Mvc;
+using Microsoft.Web.Infrastructure.DynamicModuleHelper;
+using StructureMap;
 using Upchurch.Ingress.App_Start;
-
+using Upchurch.Ingress.DependencyResolution;
 using WebActivatorEx;
 
 [assembly: PreApplicationStartMethod(typeof(StructuremapMvc), "Start")]
 [assembly: ApplicationShutdownMethod(typeof(StructuremapMvc), "End")]
 
 namespace Upchurch.Ingress.App_Start {
-	using System.Web.Mvc;
-
-    using Microsoft.Web.Infrastructure.DynamicModuleHelper;
-
-	using Upchurch.Ingress.DependencyResolution;
-
-    using StructureMap;
-    
-	public static class StructuremapMvc {
+    public static class StructuremapMvc {
         #region Public Properties
 
         public static StructureMapDependencyScope StructureMapDependencyScope { get; set; }

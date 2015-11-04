@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Upchurch.Ingress.Infrastructure;
 
 namespace Upchurch.Ingress.Tests
