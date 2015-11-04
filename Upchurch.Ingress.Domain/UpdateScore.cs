@@ -21,8 +21,16 @@ namespace Upchurch.Ingress.Domain
 
         public int? EnlightenedScore { get; set; }
         public int? ResistanceScore { get; set; }
+        /// <summary>
+        /// If this is a Long the JSON will format in exponential notation
+        /// </summary>
         public string TimeStamp { get; set; }
 
         public string Kudos { get; set; }
+
+        public long ConvertTimeStamp()
+        {
+            return long.Parse(TimeStamp);
+        }
     }
 }

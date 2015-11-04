@@ -5,10 +5,10 @@
     /// </summary>
     public class CpScore
     {
-        public int ResistanceScore { get; private set; }
-        public int EnlightenedScore { get; private set; }
+        public int ResistanceScore { get; }
+        public int EnlightenedScore { get; }
 
-        public string Kudos { get; private set; }
+        public string Kudos { get; }
 
         public CpScore(int resistanceScore, int enlightenedScore, string kudos)
         {
@@ -20,7 +20,7 @@
 
         public override string ToString()
         {
-            return string.Format("Enlightened:{0} Resistance:{1}", ResistanceScore, EnlightenedScore);
+            return $"Enlightened:{EnlightenedScore} Resistance:{ResistanceScore}";
         }
     }
 }
