@@ -5,7 +5,7 @@ namespace Upchurch.Ingress.Domain
     public class CheckPoint
     {
         private readonly DateTime _zeroTime = new DateTime(2015, 6, 2, 13, 0, 0, DateTimeKind.Utc);
-        public int CP { get; private set; }
+        public int CP { get; }
         private readonly TimeZoneInfo _easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
         public CheckPoint(DateTime dateTime)
         {
@@ -41,23 +41,23 @@ namespace Upchurch.Ingress.Domain
         {
 
             var dateTimeNow = DateTime;
-            CheckPoint newCP;
+            CheckPoint newCp;
             while (true)
             {
                 dateTimeNow = dateTimeNow.AddHours(5);
-                newCP = new CheckPoint(dateTimeNow);
-                if (newCP.Cycle.Id != Cycle.Id)
+                newCp = new CheckPoint(dateTimeNow);
+                if (newCp.Cycle.Id != Cycle.Id)
                 {
                     break;
                 }
-                if (newCP.IsFirstMessageOfDay())
+                if (newCp.IsFirstMessageOfDay())
                 {
                     break;
                 }
             }
             var easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(newCP.DateTime, easternZone);
-            return string.Format("{0} {1}", easternTime.ToShortDateString(), easternTime.ToShortTimeString());
+            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(newCp.DateTime, easternZone);
+            return $"{easternTime.ToShortDateString()} {easternTime.ToShortTimeString()}";
         }
 
         public CheckPoint(CycleIdentifier cycle, int cp)
