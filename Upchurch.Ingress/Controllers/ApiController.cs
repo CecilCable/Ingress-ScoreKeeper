@@ -106,12 +106,14 @@ namespace Upchurch.Ingress.Controllers
             var score = parser.Parse(intelJson.Json);
             var cycle = GetScoreForCycle(cycleId);
             var longtimeStamp = long.Parse(intelJson.TimeStamp);
-            var reason = cycle.IsUpdatable(score, longtimeStamp);
+            List<KeyValuePair<int, CpScore>> updatedValues;
+
+            var reason = cycle.IsUpdatable(score, longtimeStamp, out updatedValues);
             if (!string.IsNullOrEmpty(reason))
             {
                 return reason;
             }
-            if (!cycle.SetScore(score.Generate(), longtimeStamp, _scoreUpdater))
+            if (!cycle.SetScore(updatedValues, longtimeStamp, _scoreUpdater))
             {
                 return "SetScore Failed. Someone else updated it OR all CPs are already updated";
             }

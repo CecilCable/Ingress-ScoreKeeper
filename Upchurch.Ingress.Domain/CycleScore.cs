@@ -235,22 +235,43 @@ namespace Upchurch.Ingress.Domain
                 return "has exact score";
             }
 
-            if (long.Parse(cpScore.TimeStamp) != _timestampTicks)
+            if (cpScore.ConvertTimeStamp() != _timestampTicks)
             {
                 return "timestamp invalid";
             }
             return null;
         }
 
-        public string IsUpdatable(Result score, long timeStamp)
+        public string IsUpdatable(Result scores, long timeStamp, out List<KeyValuePair<int, CpScore>> updatedValues)
         {
-            if (score.regionName != "AM02-KILO-00")
+            updatedValues = new List<KeyValuePair<int, CpScore>>();
+
+            if (scores.regionName != "AM02-KILO-00")
             {
                 return "scores are not for the local region";
             }
             if (timeStamp != _timestampTicks)
             {
                 return "timestamp invalid";
+            }
+
+            foreach (var score in scores.Generate())
+            {
+                CpScore oldscore;
+                if (_scores.TryGetValue(score.Key, out oldscore))
+                {
+                    if (oldscore.EnlightenedScore == score.Value.EnlightenedScore && oldscore.ResistanceScore == score.Value.ResistanceScore)
+                    {
+                        continue;
+                    }
+                }
+
+                _scores[score.Key] = score.Value;
+                updatedValues.Add(score);
+            }
+            if (updatedValues.Count == 0)
+            {
+                return "has exact score";
             }
             return null;
         }
@@ -293,34 +314,18 @@ namespace Upchurch.Ingress.Domain
             var cpScore = new CpScore(updateScore.ResistanceScore.Value, updateScore.EnlightenedScore.Value, updateScore.Kudos);
             _scores[checkpoint] = cpScore;
             //this persists it
-            return update.UpdateScore(Cycle, checkpoint, long.Parse(updateScore.TimeStamp), cpScore);
+            return update.UpdateScore(Cycle, checkpoint, updateScore.ConvertTimeStamp(), cpScore);
         }
 
         public bool SetScore(IEnumerable<KeyValuePair<int, CpScore>> scores, long timeStamp, ICycleScoreUpdater update)
         {
-            var updatedValues = new List<KeyValuePair<int, CpScore>>();
-
-            foreach (var score in scores)
+            var arrayScores = scores.ToArray();
+            foreach (var keyValuePair in arrayScores)
             {
-                CpScore oldscore;
-                if (_scores.TryGetValue(score.Key, out oldscore))
-                {
-                    if (oldscore.EnlightenedScore == score.Value.EnlightenedScore && oldscore.ResistanceScore == score.Value.ResistanceScore)
-                    {
-                        continue;
-                    }
-                }
-                
-                _scores[score.Key] = score.Value;
-                updatedValues.Add(score);
+                _scores[keyValuePair.Key] = keyValuePair.Value;
             }
-            if (updatedValues.Count == 0)
-            {
-                return false;
-            }
-            
             //this persists it
-            return update.UpdateScore(Cycle, timeStamp, updatedValues.ToArray());
+            return update.UpdateScore(Cycle, timeStamp, arrayScores);
         }
 
         public override string ToString()
