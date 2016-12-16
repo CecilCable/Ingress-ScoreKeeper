@@ -43,17 +43,17 @@ namespace Upchurch.Ingress.Infrastructure
             {
                 if (item.Key == "snooze")
                 {
-                    _isSnoozed = item.Value.BooleanValue.Value;
+                    _isSnoozed = item.Value.PropertyType == EdmType.String ? bool.Parse(item.Value.StringValue) : item.Value.BooleanValue.Value;
                     continue;
                 }
                 var cp = int.Parse(item.Key.Substring(3));
                 if (item.Key.StartsWith("res"))
                 {
-                    SetResistanceScore(cp, item.Value.Int32Value.Value);
+                    SetResistanceScore(cp, item.Value.PropertyType == EdmType.String ? int.Parse(item.Value.StringValue) : item.Value.Int32Value.Value);
                 }
                 else if (item.Key.StartsWith("enl"))
                 {
-                    SetEnlightenedScore(cp, item.Value.Int32Value.Value);
+                    SetEnlightenedScore(cp, item.Value.PropertyType == EdmType.String ? int.Parse(item.Value.StringValue) : item.Value.Int32Value.Value);
                 }
                 else if (item.Key.StartsWith("kud"))
                 {

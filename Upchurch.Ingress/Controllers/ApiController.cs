@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Results;
+using Newtonsoft.Json.Linq;
 using Upchurch.Ingress.Domain;
 using Upchurch.Ingress.Infrastructure;
 using Upchurch.Ingress.Models;
@@ -93,23 +94,24 @@ namespace Upchurch.Ingress.Controllers
 
             return "OK";
         }
-
-        [Route("{cycleId:int}")]
+        /// <summary>
+        /// For plugins because they're stupid and we're defering as much logic here as possible
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        [Route("fiddler")]
         [HttpPost]
-        public string SetScore(int cycleId, JsonIntel intelJson)
+        public string Fiddler(JObject json)
         {
-            var parser = new RawScoreParser();
-            var score = parser.Parse(intelJson.Json);
-            var cycle = GetScoreForCycle(cycleId);
-            var longtimeStamp = long.Parse(intelJson.TimeStamp);
+            var score = RawScoreParser.Parse(json);
+            var cycle = GetScoreForCycle(score.CycleId());
             List<KeyValuePair<int, CpScore>> updatedValues;
-
-            var reason = cycle.IsUpdatable(score, longtimeStamp, out updatedValues);
+            var reason = cycle.IsUpdatable(score, out updatedValues);
             if (!string.IsNullOrEmpty(reason))
             {
                 return reason;
             }
-            if (!cycle.SetScore(updatedValues, longtimeStamp, _scoreUpdater))
+            if (!cycle.SetScore(updatedValues, _scoreUpdater))
             {
                 return "SetScore Failed. Someone else updated it OR all CPs are already updated";
             }
@@ -121,27 +123,40 @@ namespace Upchurch.Ingress.Controllers
             }
 
             return "OK";
-            ////Do you need to explicitly overwrite
-            ////is it the same score?
-            ////was it okay?
-            //var cycle = GetScoreForCycle(cycleId);
-            //var reason = cycle.IsUpdatable(newScore, checkpoint);
-            //if (!string.IsNullOrEmpty(reason))
-            //{
-            //    return reason;
-            //}
-            //if (!cycle.SetScore(checkpoint, newScore, _scoreUpdater))
-            //{
-            //    return "SetScore Failed. Probably someone else updated it already.";
-            //}
 
-            //if (!cycle.HasMissingCPs())
-            //{
-            //    PostToSlack(cycle);
-            //    return "post to slack";
-            //}
+        }
+
+        /// <remarks>
+        /// Why no add timestamp to the URL?
+        /// For pasting the fiddler response
+        /// </remarks>
+        [Route("{cycleId:int}")]
+        [HttpPost]
+        public string SetScore(int cycleId, JsonIntel intelJson)
+        {
+            var score = RawScoreParser.Parse(intelJson.Json);
+            var cycle = GetScoreForCycle(cycleId);
+            var longtimeStamp = long.Parse(intelJson.TimeStamp);
+            List<KeyValuePair<int, CpScore>> updatedValues;
+
+            var reason = cycle.IsUpdatable(score, out updatedValues, longtimeStamp);
+            if (!string.IsNullOrEmpty(reason))
+            {
+                return reason;
+            }
+            if (!cycle.SetScore(updatedValues, _scoreUpdater, longtimeStamp))
+            {
+                return "SetScore Failed. Someone else updated it OR all CPs are already updated";
+            }
+
+            if (!cycle.HasMissingCPs())
+            {
+                PostToSlack(cycle);
+                return "post to slack";
+            }
 
             return "OK";
+
         }
 
         [Route("{cycleId:int}/{isSnooze:bool}")]
@@ -156,7 +171,7 @@ namespace Upchurch.Ingress.Controllers
 
             var response = cycle.SetSnooze(isSnooze, _scoreUpdater);
 
-            return Redirect(string.Format("http://{0}/?{1}", Request.RequestUri.Host.ToLower(), response));
+            return Redirect($"http://{Request.RequestUri.Host.ToLower()}/?{response}");
 
         }
 
@@ -181,7 +196,7 @@ namespace Upchurch.Ingress.Controllers
             var cp = CheckPoint.Current();
             if (currentCycle.IsSnoozed)
             {
-                
+
                 if (cp.IsFirstMessageOfDay())
                 {
                     var snoozeMessage = string.Format("Shhh. Cycle bot is sleeping.\nGoto http://{0}/api/{1}/false to un-snooze me.\nIf you really want to know the score summary goto http://{0}/#/{1}\nI'll wake up again at {2}.", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cp.NextUnsnoozeTime());
@@ -202,8 +217,8 @@ namespace Upchurch.Ingress.Controllers
             }
             if (missingCPs.Length == 1)
             {
-                var missingMessages = string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0].Cp);
-                _slackSender.Send(missingMessages);
+
+                _slackSender.Send(string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0].Cp));
                 return;
             }
 

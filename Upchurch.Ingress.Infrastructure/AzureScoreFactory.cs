@@ -67,10 +67,10 @@ namespace Upchurch.Ingress.Infrastructure
             return UpdateScore(cycle, timestampTicks, new KeyValuePair<int, CpScore>(checkpoint, cpScore));
         }
 
-        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
+        public bool UpdateScore(CycleIdentifier cycle, long? timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
         {
             var scoreEntity = _cycleScoresCache[cycle.Id];
-            if (scoreEntity.Timestamp.Ticks != timestampTicks)//final check before we overwrite something we didn't mean to
+            if (timestampTicks.HasValue && scoreEntity.Timestamp.Ticks != timestampTicks.Value)//final check before we overwrite something we didn't mean to
             {
                 return false;
             }

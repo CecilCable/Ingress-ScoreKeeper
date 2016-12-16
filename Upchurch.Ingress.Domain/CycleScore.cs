@@ -225,6 +225,7 @@ namespace Upchurch.Ingress.Domain
         /// <returns></returns>
         public string IsUpdatable(UpdateScore cpScore, int checkpoint)
         {
+            //DO NOT CHANGE
             if (checkpoint > _maxCheckPoint)
             {
                 //only check this if the cycle is the same, else it's probably a previous cycle? Add some testing to explore this.
@@ -242,7 +243,7 @@ namespace Upchurch.Ingress.Domain
             return null;
         }
 
-        public string IsUpdatable(Result scores, long timeStamp, out List<KeyValuePair<int, CpScore>> updatedValues)
+        public string IsUpdatable(Result scores, out List<KeyValuePair<int, CpScore>> updatedValues, long? timeStamp = null)
         {
             updatedValues = new List<KeyValuePair<int, CpScore>>();
 
@@ -250,7 +251,7 @@ namespace Upchurch.Ingress.Domain
             {
                 return "scores are not for the local region";
             }
-            if (timeStamp != _timestampTicks)
+            if (timeStamp.HasValue && timeStamp.Value != _timestampTicks)
             {
                 return "timestamp invalid";
             }
@@ -317,7 +318,7 @@ namespace Upchurch.Ingress.Domain
             return update.UpdateScore(Cycle, checkpoint, updateScore.ConvertTimeStamp(), cpScore);
         }
 
-        public bool SetScore(IEnumerable<KeyValuePair<int, CpScore>> scores, long timeStamp, ICycleScoreUpdater update)
+        public bool SetScore(IEnumerable<KeyValuePair<int, CpScore>> scores, ICycleScoreUpdater update, long? timeStamp = null)
         {
             var arrayScores = scores.ToArray();
             foreach (var keyValuePair in arrayScores)

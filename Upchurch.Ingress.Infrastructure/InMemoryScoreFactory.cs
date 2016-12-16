@@ -34,7 +34,7 @@ namespace Upchurch.Ingress.Infrastructure
             return UpdateScore(cycle, timestampTicks, new KeyValuePair<int, CpScore>(checkpoint,cpScore));
         }
 
-        public bool UpdateScore(CycleIdentifier cycle, long timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
+        public bool UpdateScore(CycleIdentifier cycle, long? timestampTicks, params KeyValuePair<int, CpScore>[] cpScores)
         {
             if (_timeStamps[cycle.Id] == timestampTicks)
             {

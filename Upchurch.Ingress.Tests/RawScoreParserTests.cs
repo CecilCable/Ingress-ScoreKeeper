@@ -12,30 +12,29 @@ namespace Upchurch.Ingress.Tests
         [TestMethod]
         public void SerializeThis()
         {
-            var parser = new RawScoreParser();
+            
 
             var history = new string[1][];
             history[0] = new [] {"21", "22", "23"};
 
 
 
-           var json =  parser.Serialize(history);
+           var json = RawScoreParser.Serialize(history);
             Console.WriteLine(json);
         }
 
         [TestMethod]
         public void ParseThis2()
         {
-            var parser = new RawScoreParser();
-            var output = parser.Parse(@"{""result"":{""scoreHistory"":[[""21"",""22"",""23""]]}}");
+            
+            var output = RawScoreParser.Parse(@"{""result"":{""scoreHistory"":[[""21"",""22"",""23""]]}}");
             Assert.AreEqual(1, output.scoreHistory.Length);
         }
 
         [TestMethod]
         public void ParseThis()
         {
-            var parser = new RawScoreParser();
-           var output = parser.Parse(@"{
+           var output = RawScoreParser.Parse(@"{
   ""result"":{
     ""gameScore"":[
       ""143703"",
