@@ -10,6 +10,8 @@ namespace Upchurch.Ingress.Infrastructure
 
         public SendMessageToSlack(string slackApiUrl)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
             _slackApiUrl = slackApiUrl;
         }
 
