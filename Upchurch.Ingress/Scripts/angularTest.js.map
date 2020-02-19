@@ -1,1 +1,1 @@
-{"version":3,"file":"angularTest.js","sourceRoot":"","sources":["angularTest.ts"],"names":["greeter"],"mappings":"AAAA,SAAS,OAAO,CAAC,MAAM;IACnBA,MAAMA,CAACA,SAASA,GAAGA,MAAMA,CAACA;AAC9BA,CAACA;AAED,IAAI,IAAI,GAAG,WAAW,CAAC;AAEvB,KAAK,CAAC,OAAO,CAAC,IAAI,CAAC,CAAC,CAAC"}
+{"version":3,"file":"angularTest.js","sourceRoot":"","sources":["angularTest.ts"],"names":[],"mappings":"AAAA,SAAS,OAAO,CAAC,MAAM;IACnB,OAAO,SAAS,GAAG,MAAM,CAAC;AAC9B,CAAC;AAED,IAAI,IAAI,GAAG,WAAW,CAAC;AAEvB,KAAK,CAAC,OAAO,CAAC,IAAI,CAAC,CAAC,CAAC"}

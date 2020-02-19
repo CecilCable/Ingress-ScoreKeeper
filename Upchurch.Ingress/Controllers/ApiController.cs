@@ -171,7 +171,7 @@ namespace Upchurch.Ingress.Controllers
 
             var response = cycle.SetSnooze(isSnooze, _scoreUpdater);
 
-            return Redirect($"http://{Request.RequestUri.Host.ToLower()}/?{response}");
+            return Redirect($"https://{Request.RequestUri.Host.ToLower()}/?{response}");
 
         }
 
@@ -187,8 +187,10 @@ namespace Upchurch.Ingress.Controllers
         public void PostToSlack()
         {
             var currentCycle = _scoreUpdater.GetScoreForCycle(CheckPoint.Current().Cycle);
-
-            PostToSlack(currentCycle);
+            if (currentCycle.MissingCPs().Count() != 0)
+            {
+                PostToSlack(currentCycle);//only post of there are missing CPs
+            }
         }
 
         private void PostToSlack(CycleScore currentCycle)
@@ -218,13 +220,13 @@ namespace Upchurch.Ingress.Controllers
             if (missingCPs.Length == 1)
             {
 
-                _slackSender.Send(string.Format("Missing CP {2}. Goto http://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0].Cp));
+                _slackSender.Send(string.Format("Missing CP {2}. Goto https://{0}/#/{1}/{2} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, missingCPs[0].Cp));
                 return;
             }
 
             var cpString = ConvertToDashAndCommaString(missingCPs);
 
-            var manymissing = string.Format("Missing CPs {2}. Goto http://{0}/#/{1} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cpString);
+            var manymissing = string.Format("Missing CPs {2}. Goto https://{0}/#/{1} to update the score", Request.RequestUri.Host.ToLower(), currentCycle.Cycle.Id, cpString);
             _slackSender.Send(manymissing);
 
 
