@@ -50,10 +50,12 @@
     <Compile Include="ICycleScoreUpdater.cs" />
     <Compile Include="Intel\Score.cs" />
     <Compile Include="Intel\Result.cs" />
+    <Compile Include="IScraperData.cs" />
     <Compile Include="MissingScore.cs" />
     <Compile Include="OverallScore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecordedScore.cs" />
+    <Compile Include="ScraperMeta.cs" />
     <Compile Include="UpdateScore.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

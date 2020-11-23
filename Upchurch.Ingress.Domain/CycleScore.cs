@@ -164,7 +164,7 @@ namespace Upchurch.Ingress.Domain
         private readonly int _maxCheckPoint;
 
         /// <summary>
-        ///     Cycle with checpoint scores
+        ///     Cycle with checkpoint scores
         /// </summary>
         /// <param name="cycleIdentifier"></param>
         /// <param name="timestampTicks"></param>

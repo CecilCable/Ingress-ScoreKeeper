@@ -7,42 +7,66 @@ using Upchurch.Ingress.Domain;
 
 namespace Upchurch.Ingress.Infrastructure
 {
+    
+
+    public class ScraperService: IScraperService
+    {
+        private readonly CloudTable _cloudTable;
+        public ScraperService(string connectionString)
+        {
+            // Create the table client.
+            var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
+            _cloudTable = tableClient.GetTableReference("ScraperMeta");
+        }
+        public IScraperMeta GetData()
+        {
+            var scraperMeta = _cloudTable.Execute(TableOperation.Retrieve<ScraperEntity>(AzureScoreFactory.CincinnatiArea, AzureScoreFactory.CincinnatiArea));
+            return (ScraperEntity)scraperMeta.Result;
+        }
+
+        public void SetMeta(IScraperMeta scraperMeta)
+        {
+            var oldMeta = _cloudTable.Execute(TableOperation.Retrieve<ScraperEntity>(AzureScoreFactory.CincinnatiArea,
+                AzureScoreFactory.CincinnatiArea));
+            var oldEntity = (ScraperEntity)oldMeta.Result;
+            oldEntity.Session = scraperMeta.Session;
+            oldEntity.Token = scraperMeta.Token;
+            oldEntity.Version = scraperMeta.Version;
+
+            _cloudTable.Execute(TableOperation.Replace(oldEntity));
+        }
+    }
+
     public class AzureScoreFactory : ICycleScoreUpdater
     {
+        public const string CincinnatiArea = "AM02-KILO-00";
+
         private readonly CloudTable _cloudTable;
 
         private readonly IDictionary<int, ScoreEntity> _cycleScoresCache;
 
         public AzureScoreFactory(string connectionString)
         {
-            var storageAccount = CloudStorageAccount.Parse(connectionString);
-
             // Create the table client.
-            var tableClient = storageAccount.CreateCloudTableClient();
+            var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
 
             // Create the table if it doesn't exist.
             _cloudTable = tableClient.GetTableReference("scores");
             _cloudTable.CreateIfNotExists();
-
             _cycleScoresCache = new ConcurrentDictionary<int, ScoreEntity>();
-
         }
-
-
 
 
         private ScoreEntity ScoreForCycleFromStorage(CycleIdentifier cycle)
         {
             var scoreEntity = new ScoreEntity(cycle);
 
-            var retrieveOperation = TableOperation.Retrieve<ScoreEntity>(ScoreEntity.CincinnatiArea, scoreEntity.RowKey);
-
-            var retrievedResult = _cloudTable.Execute(retrieveOperation);
+            var retrievedResult = _cloudTable.Execute(TableOperation.Retrieve<ScoreEntity>(CincinnatiArea, scoreEntity.RowKey));
 
             if (retrievedResult.Result == null)
             {
                 // Execute the insert operation.
-                //don't insert yet
+                // don't insert yet
                 //_cloudTable.Execute(TableOperation.Insert(scoreEntity));
                 return scoreEntity;
             }
@@ -52,8 +76,7 @@ namespace Upchurch.Ingress.Infrastructure
 
         public CycleScore GetScoreForCycle(CycleIdentifier cycle)
         {
-            ScoreEntity scoreEntity;
-            if (_cycleScoresCache.TryGetValue(cycle.Id, out scoreEntity))
+            if (_cycleScoresCache.TryGetValue(cycle.Id, out var scoreEntity))
             {
                 return scoreEntity.CycleScore();
             }

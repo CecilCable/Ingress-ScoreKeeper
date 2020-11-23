@@ -77,10 +77,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawScoreParser.cs" />
     <Compile Include="ScoreEntity.cs" />
+    <Compile Include="ScraperMeta.cs" />
     <Compile Include="SendMessageToSlack.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

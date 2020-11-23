@@ -14,16 +14,18 @@ namespace Upchurch.Ingress.Controllers
     {
         private readonly ICycleScoreUpdater _scoreUpdater;
         private readonly ISlackSender _slackSender;
+        private readonly IScraperService _scraperService;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="scoreUpdater">should be a singleton</param>
         /// <param name="slackSender"></param>
-        public ValuesController(ICycleScoreUpdater scoreUpdater, ISlackSender slackSender)
+        public ValuesController(ICycleScoreUpdater scoreUpdater, ISlackSender slackSender, IScraperService scraperService)
         {
             _scoreUpdater = scoreUpdater;
             _slackSender = slackSender;
+            _scraperService = scraperService;
         }
 
         private CycleScore GetScoreForCycle(int cycleId)
@@ -192,6 +194,21 @@ namespace Upchurch.Ingress.Controllers
                 PostToSlack(currentCycle);//only post of there are missing CPs
             }
         }
+
+        [Route("Meta")]
+        [HttpPost]
+        public void SetMeta(ScraperMeta meta)
+        {
+            _scraperService.SetMeta(meta);
+        }
+
+        [Route("Meta")]
+        [HttpGet]
+        public JsonResult<IScraperMeta> GetData()
+        {
+            return Json(_scraperService.GetData());
+        }
+
 
         private void PostToSlack(CycleScore currentCycle)
         {

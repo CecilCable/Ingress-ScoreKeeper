@@ -9,7 +9,6 @@ namespace Upchurch.Ingress.Infrastructure
 {
     public class ScoreEntity : TableEntity
     {
-        public const string CincinnatiArea = "AM02-KILO-00";
         private readonly IDictionary<int, CpScore> _scores = new Dictionary<int, CpScore>();
         private bool _isSnoozed;
 
@@ -19,7 +18,7 @@ namespace Upchurch.Ingress.Infrastructure
         /// <param name="cycleScore"></param>
         public ScoreEntity(CycleIdentifier cycleScore)
         {
-            PartitionKey = CincinnatiArea;
+            PartitionKey = AzureScoreFactory.CincinnatiArea;
             RowKey = cycleScore.Id.ToString();
             Timestamp = DateTimeOffset.MinValue;
         }
@@ -27,7 +26,7 @@ namespace Upchurch.Ingress.Infrastructure
         // for Serialization
         public ScoreEntity()
         {
-            PartitionKey = CincinnatiArea;
+            PartitionKey = AzureScoreFactory.CincinnatiArea;
         }
 
         public CycleScore CycleScore()
@@ -64,8 +63,7 @@ namespace Upchurch.Ingress.Infrastructure
 
         private void SetResistanceScore(int cp, int resistanceScore)
         {
-            CpScore cpScore;
-            if (!_scores.TryGetValue(cp, out cpScore))
+            if (!_scores.TryGetValue(cp, out var cpScore))
             {
                 cpScore = new CpScore(resistanceScore, 0,null);
                 _scores.Add(cp, cpScore);
@@ -76,8 +74,7 @@ namespace Upchurch.Ingress.Infrastructure
 
         private void SetEnlightenedScore(int cp, int enlightenedScore)
         {
-            CpScore cpScore;
-            if (!_scores.TryGetValue(cp, out cpScore))
+            if (!_scores.TryGetValue(cp, out var cpScore))
             {
                 cpScore = new CpScore(0, enlightenedScore, null);
                 _scores.Add(cp, cpScore);
@@ -87,8 +84,7 @@ namespace Upchurch.Ingress.Infrastructure
 
         private void SetKudos(int cp, string kudos)
         {
-            CpScore cpScore;
-            if (!_scores.TryGetValue(cp, out cpScore))
+            if (!_scores.TryGetValue(cp, out var cpScore))
             {
                 cpScore = new CpScore(0, 0, kudos);
                 _scores.Add(cp, cpScore);

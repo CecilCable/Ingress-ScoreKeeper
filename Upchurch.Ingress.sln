@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upchurch.Ingress", "Upchurch.Ingress\Upchurch.Ingress.csproj", "{9B68B5B5-AD25-4FD3-A77E-BB47B6C83504}"
 EndProject
@@ -21,13 +21,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upchurch.Ingress.Domain", "Upchurch.Ingress.Domain\Upchurch.Ingress.Domain.csproj", "{4FBDE2B2-A47D-4E67-AC04-262F15A61B55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upchurch.Ingress.Infrastructure", "Upchurch.Ingress.Infrastructure\Upchurch.Ingress.Infrastructure.csproj", "{C9499A76-C059-49C6-8963-EBF164635B79}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{E9B08FCE-BB13-4BCE-97E1-49623C6192F6}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,5 +50,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{22B64110-4660-43D4-9345-E5886FDB9BA1} = {3AAA59C8-66FA-4C18-8A6D-FD44B1332374}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8FEDBB0F-A8B9-4DA4-9FEC-58897AE0261B}
 	EndGlobalSection
 EndGlobal

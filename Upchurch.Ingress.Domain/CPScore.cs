@@ -7,7 +7,6 @@
     {
         public int ResistanceScore { get; }
         public int EnlightenedScore { get; }
-
         public string Kudos { get; }
 
         public CpScore(int resistanceScore, int enlightenedScore, string kudos)

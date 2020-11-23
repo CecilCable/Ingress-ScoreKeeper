@@ -27,17 +27,19 @@ namespace Upchurch.Ingress.DependencyResolution {
         public static IContainer Initialize() {
             return new Container(c =>
             {
-                //c.AddRegistry<DefaultRegistry>();
-
                 var connectionString = ConfigurationManager.ConnectionStrings["AzureTables"];
                 
                 if (connectionString != null)
                 {
+                    c.ForSingletonOf<IScraperService>().Use<ScraperService>().Ctor<string>("connectionString").Is(connectionString.ConnectionString);
                     c.ForSingletonOf<ICycleScoreUpdater>().Use<AzureScoreFactory>().Ctor<string>("connectionString").Is(connectionString.ConnectionString);
                 }
                 else
                 {
-                    //c.ForSingletonOf<ICycleScoreUpdater>().Use<AzureScoreFactory>().Ctor<string>("connectionString").Is("PasteConnectionStringHere");
+                    var pasteConnectionString =
+                        "DefaultEndpointsProtocol=https;AccountName=PASTE";
+                    c.ForSingletonOf<ICycleScoreUpdater>().Use<AzureScoreFactory>().Ctor<string>("connectionString").Is(pasteConnectionString);
+                    c.ForSingletonOf<IScraperService>().Use<ScraperService>().Ctor<string>("connectionString").Is(pasteConnectionString);
                     c.For<ICycleScoreUpdater>().Use<InMemoryScoreFactory>().Singleton();
                 }
                 

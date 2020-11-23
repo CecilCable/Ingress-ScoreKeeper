@@ -190,7 +190,6 @@
     <Content Include="json.html" />
     <Content Include="overall.html" />
     <Content Include="OverallScore.html" />
-    <Content Include="scorekeeper.user.js" />
     <Content Include="Scores.html" />
     <Content Include="Scripts\angular-animate.js" />
     <Content Include="Scripts\angular-animate.min.js" />
